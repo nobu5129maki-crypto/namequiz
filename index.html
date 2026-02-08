@@ -149,7 +149,6 @@
         const MAX_QUESTIONS = 10;
         let currentAge = 20;
 
-        // サーバーサイドAPIを呼び出す
         async function fetchAI(body) {
             try {
                 const res = await fetch('/api/quiz', {
@@ -196,14 +195,13 @@
             try {
                 const response = await fetchAI({
                     contents: [{ parts: [{ text: `日本の有名人クイズ（${currentAge}代向け）を1つ作成してください。
-                    必ず以下のJSONフォーマットのみを出力し、それ以外の解説などは一切含めないでください。
-                    キー名は必ず英語の小文字で "name", "hint1", "hint2", "hint3" に固定してください。
+                    必ず以下のJSONフォーマットのみを正確に出力してください。他のテキストは一切不要です。
 
                     {
-                      "name": "フルネーム（例：木村拓哉）",
-                      "hint1": "具体的な職業や肩書き",
-                      "hint2": "有名な作品、受賞歴、または特徴的なエピソード",
-                      "hint3": "苗字の最初の1文字"
+                      "name": "フルネーム",
+                      "hint1": "その人のメインの職業や実績",
+                      "hint2": "具体的な出演作や有名なエピソード",
+                      "hint3": "苗字の最初の1文字（例：『あ』から始まる）"
                     }` }] }],
                     generationConfig: { 
                         responseMimeType: "application/json"
@@ -214,23 +212,20 @@
                     const contentText = response.candidates[0].content.parts[0].text;
                     const data = JSON.parse(contentText);
                     
-                    // AIが日本語キーで返した場合や表記ゆれも想定して抽出
-                    targetName = data.name || data.名前 || "不明な有名人";
+                    targetName = data.name || data.名前 || "不明";
                     
-                    const h1 = data.hint1 || data.ヒント1 || data.hint_1 || "ヒントが見つかりませんでした";
-                    const h2 = data.hint2 || data.ヒント2 || data.hint_2 || "ヒントが見つかりませんでした";
-                    const h3 = data.hint3 || data.ヒント3 || data.hint_3 || "ヒントが見つかりませんでした";
+                    // キーの表記ゆれに強く対応
+                    const h1 = data.hint1 || data.ヒント1 || data.hint_1 || "情報の取得に失敗しました";
+                    const h2 = data.hint2 || data.ヒント2 || data.hint_2 || "情報の取得に失敗しました";
+                    const h3 = data.hint3 || data.ヒント3 || data.hint_3 || (targetName.charAt(0) + "から始まる名前です");
 
                     hints = [h1, h2, h3];
                     
                     document.getElementById('loading-screen').classList.add('hidden');
                     revealNextHint();
-                } else {
-                    throw new Error("AIの応答が空です");
                 }
             } catch (e) {
                 console.error("Fetch Error:", e);
-                // エラー時は少し待って自動リトライ
                 setTimeout(() => nextQuestion(), 1000);
             }
         }
@@ -242,10 +237,21 @@
             const textElement = document.getElementById(`hint-${currentHintLevel}-text`);
             
             if (textElement) {
-                // 配列からヒントを取得してセット
-                textElement.innerText = hints[currentHintLevel-1] || "追加ヒントはありません";
+                // ここで確実にヒントを代入
+                const text = hints[currentHintLevel-1];
+                textElement.innerText = text;
                 h.classList.remove('hidden');
+                // アニメーションのためにクラスを追加
                 setTimeout(() => h.classList.add('show'), 50);
+            }
+            
+            // 全てのヒントが出たらボタンを無効化
+            if (currentHintLevel === 3) {
+                document.getElementById('next-hint-btn').disabled = true;
+                document.getElementById('next-hint-btn').classList.add('opacity-50');
+            } else {
+                document.getElementById('next-hint-btn').disabled = false;
+                document.getElementById('next-hint-btn').classList.remove('opacity-50');
             }
         }
 
