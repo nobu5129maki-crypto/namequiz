@@ -51,10 +51,10 @@
         <!-- ヘッダー -->
         <div class="premium-grad p-8 text-white text-center shadow-lg">
             <div class="flex flex-col items-center justify-center space-y-4">
-                <img src="icon.svg" alt="アプリのアイコン" class="app-icon">
+                <img src="icon.svg" alt="アプリのアイコン" class="app-icon" onerror="this.src='https://via.placeholder.com/80?text=Quiz'">
                 <h1 class="text-3xl font-black tracking-tighter">クイズ・マスター Pro</h1>
             </div>
-            <p class="text-orange-100 text-sm mt-2 font-medium tracking-widest">プレミアム・エディション</p>
+            <p class="text-orange-100 text-sm mt-2 font-medium tracking-widest uppercase">Premium Edition</p>
         </div>
 
         <!-- スタート画面 -->
@@ -78,22 +78,38 @@
                 <button onclick="startGame(40)" class="bg-white hover:bg-orange-500 hover:text-white text-orange-600 py-4 rounded-2xl font-bold border-2 border-orange-500 transition-all shadow-sm active:scale-95">40代</button>
                 <button onclick="startGame(50)" class="bg-white hover:bg-orange-500 hover:text-white text-orange-600 py-4 rounded-2xl font-bold border-2 border-orange-500 transition-all shadow-sm active:scale-95">50代以上</button>
             </div>
+            <!-- 履歴ボタン -->
+            <button onclick="showHistory()" class="w-full mt-4 text-slate-400 text-sm font-bold flex items-center justify-center gap-2 py-2 hover:text-orange-500 transition">
+                <span>📖</span> 過去に正解した有名人リスト
+            </button>
+        </div>
+
+        <!-- 履歴画面 -->
+        <div id="history-screen" class="hidden p-8 space-y-6 max-h-[600px] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-4">
+                <h2 class="text-xl font-black text-slate-800 tracking-tighter">正解コレクション</h2>
+                <button onclick="backToTitle()" class="text-slate-400 hover:text-red-500 text-2xl">×</button>
+            </div>
+            <div id="history-list" class="space-y-3">
+                <!-- 履歴が動的に追加される -->
+            </div>
+            <button onclick="backToTitle()" class="w-full bg-slate-100 py-4 rounded-2xl font-bold text-slate-500 active:scale-95">戻る</button>
         </div>
 
         <!-- ゲーム画面 -->
         <div id="game-screen" class="hidden p-8 space-y-8">
             <div class="flex justify-between items-end border-b border-gray-100 pb-4">
                 <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">現在の合計スコア</p>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">合計スコア</p>
                     <p id="total-score" class="text-3xl font-black text-orange-600 font-sans leading-none">0</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">進捗状況</p>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">進捗</p>
                     <p class="text-lg font-bold text-gray-600">第 <span id="current-idx-display">1</span> / 10 問</p>
                 </div>
             </div>
 
-            <!-- ヒント表示エリア -->
+            <!-- ヒントエリア -->
             <div id="hints-container" class="space-y-4 min-h-[320px]">
                 <div id="hint-1" class="hint-item bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-2xl hidden">
                     <span class="inline-block px-2 py-1 bg-blue-500 text-white text-[10px] font-bold rounded mb-2">第1ヒント (100点)</span>
@@ -109,7 +125,7 @@
                 </div>
             </div>
 
-            <!-- 入力コントロール -->
+            <!-- 回答入力 -->
             <div class="space-y-4 pt-6">
                 <input type="text" id="answer-input" placeholder="ここにお名前を入力" autocomplete="off"
                        class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-orange-400 focus:bg-white outline-none text-center text-xl font-black transition-all shadow-inner">
@@ -146,30 +162,29 @@
             <div class="space-y-2">
                 <div class="text-7xl mb-4">👑</div>
                 <h2 class="text-4xl font-black text-slate-800 tracking-tighter">終了です！</h2>
-                <p class="text-slate-500">お疲れ様でした。今回の結果は以下の通りです。</p>
+                <p class="text-slate-500">10問の挑戦が終わりました。</p>
             </div>
             
             <div class="relative py-10 bg-slate-50 rounded-[3rem]">
                 <p class="text-7xl font-black text-orange-600 font-sans" id="final-score-display">0</p>
-                <p class="text-xs font-bold text-orange-400 mt-2 tracking-widest uppercase">合計獲得ポイント</p>
+                <p class="text-xs font-bold text-orange-400 mt-2 tracking-widest uppercase">Total Points</p>
                 <div id="new-record-badge" class="hidden absolute -top-4 -right-4 bg-red-500 text-white text-[10px] font-black px-4 py-2 rounded-full shadow-lg rotate-12 animate-pulse">最高記録更新！</div>
             </div>
 
-            <button onclick="location.reload()" class="w-full bg-slate-800 text-white py-6 rounded-2xl font-black shadow-2xl transition active:scale-95 uppercase tracking-widest">
+            <button onclick="backToTitle()" class="w-full bg-slate-800 text-white py-6 rounded-2xl font-black shadow-2xl transition active:scale-95 uppercase tracking-widest">
                 タイトルに戻る
             </button>
         </div>
     </div>
 
-    <!-- ロード中画面 -->
+    <!-- ロード画面 -->
     <div id="loading-screen" class="hidden fixed inset-0 bg-white/95 z-50 flex flex-col items-center justify-center">
         <div class="loading-spinner"></div>
         <p class="mt-6 font-black text-orange-600 uppercase tracking-widest text-xs">問題を生成しています...</p>
     </div>
 
     <script>
-        // APIキーはVercelの環境変数 GEMINI_API_KEY から参照されることを想定しています
-        const apiKey = ""; 
+        const apiKey = ""; // Vercelの環境変数 GEMINI_API_KEY が実行時に注入されます
 
         let targetName = "";
         let currentTotalScore = 0;
@@ -178,11 +193,13 @@
         let hints = [];
         let pastCelebrities = [];
         const MAX_QUESTIONS = 10;
+        let currentAge = 20;
 
         // ハイスコアの取得
         let highScore = localStorage.getItem('quiz_high_score_pro') || 0;
         document.getElementById('high-score-display').innerText = highScore;
 
+        // API通信関数（リトライ機能付き）
         async function fetchAI(url, body) {
             const maxRetries = 5;
             for (let i = 0; i < maxRetries; i++) {
@@ -204,8 +221,11 @@
             currentAge = age;
             currentTotalScore = 0;
             currentQuestionIdx = 1;
+            pastCelebrities = []; // ゲーム開始時に履歴をリセット（重複防止用）
             document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('final-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('total-score').innerText = "0";
             nextQuestion();
         }
 
@@ -229,18 +249,18 @@
             document.getElementById('current-idx-display').innerText = currentQuestionIdx;
 
             try {
-                const excluded = pastCelebrities.length > 0 ? `過去に出た人: ${pastCelebrities.join(', ')}。これ以外で選んでください。` : "";
+                const excluded = pastCelebrities.length > 0 ? `過去に出題した人: ${pastCelebrities.join(', ')}。これらとは別の人を選んでください。` : "";
                 const response = await fetchAI(
                     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`,
                     {
-                        contents: [{ parts: [{ text: `あなたはプロのクイズ制作作家です。${currentAge}代に非常に有名な日本国内の人物（存命・故人問わず）を1人選び、3段階のヒントを作成してください。
+                        contents: [{ parts: [{ text: `あなたはプロのクイズ制作作家です。${currentAge}代の日本人に非常に有名な人物（存命・故人問わず）を1人選び、3段階のクイズを作成してください。
                         ${excluded}
-                        【ルール】
-                        1. ヒント1(100点): 職業やジャンル、大きな実績（決定的な名前は伏せる）
-                        2. ヒント2(50点): 具体的な代表作や有名なエピソード
-                        3. ヒント3(30点): 名字の最初の1文字（例：『た』から始まる）
+                        【ヒントの作り方】
+                        1. ヒント1(100点): 職業や主要な功績（名前を推測できるギリギリの抽象度で）
+                        2. ヒント2(50点): 具体的な代表作品や有名なエピソード
+                        3. ヒント3(30点): 名字の最初の1文字（例：名字が「佐藤」なら「さ」から始まる）
                         
-                        JSON形式で出力：{"name": "フルネーム", "hint1": "...", "hint2": "...", "hint3": "..."}` }] }],
+                        JSON形式のみで出力：{"name": "フルネーム", "hint1": "...", "hint2": "...", "hint3": "..."}` }] }],
                         generationConfig: { responseMimeType: "application/json" }
                     }
                 );
@@ -272,7 +292,6 @@
             const input = document.getElementById('answer-input').value.trim();
             if (!input) return;
 
-            // 表記揺れの簡易吸収
             const normalize = (s) => s.replace(/\s+/g, '').replace(/[ぁ-ん]/g, m => String.fromCharCode(m.charCodeAt(0) + 0x60));
             const isCorrect = normalize(input) === normalize(targetName);
             
@@ -285,6 +304,7 @@
                 document.getElementById('result-emoji').innerText = "🎉";
                 document.getElementById('result-title').innerText = "正解です！";
                 document.getElementById('earned-points').innerText = `+${points} ポイント獲得`;
+                saveToHistory(targetName); 
             } else {
                 document.getElementById('result-emoji').innerText = "❌";
                 document.getElementById('result-title').innerText = "残念...";
@@ -292,13 +312,49 @@
             }
             document.getElementById('correct-name').innerText = targetName;
             modal.classList.remove('hidden');
-            document.getElementById('modal-next-btn').innerText = currentQuestionIdx === MAX_QUESTIONS ? "結果を確認する" : "次の問題へ進む";
+            document.getElementById('modal-next-btn').innerText = currentQuestionIdx === MAX_QUESTIONS ? "最終結果を見る" : "次の問題へ";
         }
 
         function closeModal() {
             document.getElementById('result-modal').classList.add('hidden');
             currentQuestionIdx++;
             nextQuestion();
+        }
+
+        function saveToHistory(name) {
+            let history = JSON.parse(localStorage.getItem('quiz_history_pro') || '[]');
+            if (!history.includes(name)) {
+                history.push(name);
+                localStorage.setItem('quiz_history_pro', JSON.stringify(history));
+            }
+        }
+
+        function showHistory() {
+            const history = JSON.parse(localStorage.getItem('quiz_history_pro') || '[]');
+            const listElem = document.getElementById('history-list');
+            listElem.innerHTML = '';
+            
+            if (history.length === 0) {
+                listElem.innerHTML = '<p class="text-slate-400 text-center py-10">まだ正解した有名人がいません。</p>';
+            } else {
+                history.forEach(name => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-slate-50 p-4 rounded-xl font-bold text-slate-700 border border-slate-100 flex justify-between items-center';
+                    div.innerHTML = `<span>${name}</span><span class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-md">Collected</span>`;
+                    listElem.appendChild(div);
+                });
+            }
+            
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('history-screen').classList.remove('hidden');
+        }
+
+        function backToTitle() {
+            document.getElementById('history-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('final-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            document.getElementById('high-score-display').innerText = localStorage.getItem('quiz_high_score_pro') || 0;
         }
 
         function showFinalResult() {
@@ -309,6 +365,9 @@
             if (currentTotalScore > highScore) {
                 localStorage.setItem('quiz_high_score_pro', currentTotalScore);
                 document.getElementById('new-record-badge').classList.remove('hidden');
+                highScore = currentTotalScore;
+            } else {
+                document.getElementById('new-record-badge').classList.add('hidden');
             }
         }
     </script>
