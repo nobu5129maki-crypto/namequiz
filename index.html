@@ -178,8 +178,11 @@
     </div>
 
     <script>
-        // Use environment variable from Vercel if available, otherwise fallback to empty string
-        // The __GEMINI_API_KEY__ is a placeholder that can be replaced during build or injected by the platform.
+        /**
+         * APIキーの設定について:
+         * Vercelの環境変数 GEMINI_API_KEY を参照しようとします。
+         * ローカル環境や、注入されない環境では空文字になります。
+         */
         const apiKey = typeof __GEMINI_API_KEY__ !== 'undefined' ? __GEMINI_API_KEY__ : "";
 
         let targetName = "";
@@ -204,8 +207,9 @@
         document.getElementById('high-score-display').innerText = highScore;
 
         async function fetchAI(url, body) {
-            if (!apiKey) {
-                throw new Error("APIキーが設定されていません。Vercelの環境変数 GEMINI_API_KEY を設定してください。");
+            // apiKeyが空の場合のチェック
+            if (!apiKey || apiKey === "") {
+                throw new Error("APIキーが設定されていません。Vercelの環境変数 GEMINI_API_KEY に値を設定してください。");
             }
             
             const maxRetries = 5;
@@ -220,7 +224,7 @@
                     if (res.ok) return await res.json();
                     
                     if (res.status === 401 || res.status === 403) {
-                        throw new Error("APIキーが無効です。設定を確認してください。");
+                        throw new Error("APIキーが無効です。Vercelの設定画面で正しいキーが入力されているか確認してください。");
                     }
                 } catch (e) {
                     if (i === maxRetries - 1) throw e;
