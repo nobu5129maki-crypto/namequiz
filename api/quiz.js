@@ -1,8 +1,6 @@
 export default async function handler(req, res) {
-  // Vercelのダッシュボードで設定した GEMINI_API_KEY を取得
-  //const apiKey = process.env.GEMINI_API_KEY;
-// テスト用：直接キーを書き込んで動くか確認する（※確認後は必ず元に戻すこと！）
-const apiKey = "あなたの本物のAPIキーをここに直接貼る";
+  const apiKey = process.env.GEMINI_API_KEY;
+
   if (!apiKey) {
     return res.status(500).json({ error: "APIキーがVercel上で設定されていません。" });
   }
@@ -22,8 +20,15 @@ const apiKey = "あなたの本物のAPIキーをここに直接貼る";
     );
 
     const data = await response.json();
+
+    // デバッグ用：構造が違う場合にエラーを特定しやすくする
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      console.error("Gemini API Error Response:", data);
+      return res.status(500).json({ error: "AIからの応答が不正です。APIキーの権限やモデル名を確認してください。" });
+    }
+
     return res.status(200).json(data);
   } catch (error) {
-    return res.status(500).json({ error: "AIへのリクエスト中にエラーが発生しました。" });
+    return res.status(500).json({ error: "サーバー通信エラーが発生しました。" });
   }
 }
