@@ -186,7 +186,6 @@
             document.getElementById('answer-input').value = "";
             document.getElementById('current-idx-display').innerText = currentQuestionIdx;
             
-            // ヒント表示をリセット
             for(let i=1; i<=3; i++) {
                 const h = document.getElementById(`hint-${i}`);
                 h.classList.add('hidden');
@@ -196,34 +195,43 @@
 
             try {
                 const response = await fetchAI({
-                    contents: [{ parts: [{ text: `日本の有名人クイズを作成してください。対象：${currentAge}代。JSON形式のみで出力し、余計な文章は含めないでください。
-                    キー名は必ず "name", "hint1", "hint2", "hint3" にしてください。
-                    {"name":"フルネーム","hint1":"その人の職業や肩書き","hint2":"代表作や有名なエピソード","hint3":"苗字の1文字目"}` }] }],
-                    generationConfig: { responseMimeType: "application/json" }
+                    contents: [{ parts: [{ text: `日本の有名人クイズ（${currentAge}代向け）を1つ作成してください。
+                    必ず以下のJSONフォーマットを遵守し、それ以外のテキストは一切含めないでください。
+                    キー名は必ず英語の小文字にしてください。
+
+                    {
+                      "name": "フルネーム",
+                      "hint1": "具体的な職業や肩書き",
+                      "hint2": "有名な作品、受賞歴、または特徴的なエピソード",
+                      "hint3": "苗字の最初の1文字"
+                    }` }] }],
+                    generationConfig: { 
+                        responseMimeType: "application/json"
+                    }
                 });
                 
                 if (response.candidates && response.candidates[0]) {
                     const contentText = response.candidates[0].content.parts[0].text;
                     const data = JSON.parse(contentText);
                     
-                    targetName = data.name || "不明";
-                    // データが欠落していた場合のフォールバック
-                    hints = [
-                        data.hint1 || "職業情報なし",
-                        data.hint2 || "エピソード情報なし",
-                        data.hint3 || "ヒントなし"
-                    ];
+                    // キー名が日本語などで返ってきた場合を考慮した抽出
+                    targetName = data.name || data.名前 || "不明な有名人";
+                    
+                    const h1 = data.hint1 || data.ヒント1 || data.hint_1 || "職業情報が取得できませんでした";
+                    const h2 = data.hint2 || data.ヒント2 || data.hint_2 || "エピソードが取得できませんでした";
+                    const h3 = data.hint3 || data.ヒント3 || data.hint_3 || "苗字ヒントが取得できませんでした";
+
+                    hints = [h1, h2, h3];
                     
                     document.getElementById('loading-screen').classList.add('hidden');
                     revealNextHint();
                 } else {
-                    throw new Error("AIのデータ構造が異常です。");
+                    throw new Error("AIの応答が空です");
                 }
             } catch (e) {
                 console.error("Fetch Error:", e);
-                document.getElementById('loading-screen').classList.add('hidden');
-                alert(`エラーが発生しました。再試行します: ${e.message}`);
-                nextQuestion(); // 自動的に再試行
+                // エラー時は少し待って自動リトライ
+                setTimeout(() => nextQuestion(), 1000);
             }
         }
 
@@ -236,7 +244,6 @@
             if (textElement) {
                 textElement.innerText = hints[currentHintLevel-1];
                 h.classList.remove('hidden');
-                // 少し遅延させてアニメーションを適用
                 setTimeout(() => h.classList.add('show'), 50);
             }
         }
@@ -245,7 +252,7 @@
             const input = document.getElementById('answer-input').value.trim();
             if (!input) return;
 
-            const normalize = (s) => s.replace(/\s+/g, '');
+            const normalize = (s) => s.replace(/\s+/g, '').toLowerCase();
             const isCorrect = normalize(input) === normalize(targetName);
             
             if (isCorrect) {
@@ -281,7 +288,6 @@
             }
         }
 
-        // 初期表示でハイスコアを読み込む
         document.getElementById('high-score-display').innerText = localStorage.getItem('quiz_high_score_pro') || 0;
     </script>
 </body>
