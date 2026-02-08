@@ -191,27 +191,39 @@
                 const h = document.getElementById(`hint-${i}`);
                 h.classList.add('hidden');
                 h.classList.remove('show');
+                document.getElementById(`hint-${i}-text`).innerText = "";
             }
 
             try {
                 const response = await fetchAI({
-                    contents: [{ parts: [{ text: `日本の有名人クイズ。対象：${currentAge}代。JSON形式のみで出力。{"name":"フルネーム","hint1":"職業","hint2":"代表作やエピソード","hint3":"名字の1文字目"}` }] }],
+                    contents: [{ parts: [{ text: `日本の有名人クイズを作成してください。対象：${currentAge}代。JSON形式のみで出力し、余計な文章は含めないでください。
+                    キー名は必ず "name", "hint1", "hint2", "hint3" にしてください。
+                    {"name":"フルネーム","hint1":"その人の職業や肩書き","hint2":"代表作や有名なエピソード","hint3":"苗字の1文字目"}` }] }],
                     generationConfig: { responseMimeType: "application/json" }
                 });
                 
                 if (response.candidates && response.candidates[0]) {
-                    const data = JSON.parse(response.candidates[0].content.parts[0].text);
-                    targetName = data.name;
-                    hints = [data.hint1, data.hint2, data.hint3];
+                    const contentText = response.candidates[0].content.parts[0].text;
+                    const data = JSON.parse(contentText);
+                    
+                    targetName = data.name || "不明";
+                    // データが欠落していた場合のフォールバック
+                    hints = [
+                        data.hint1 || "職業情報なし",
+                        data.hint2 || "エピソード情報なし",
+                        data.hint3 || "ヒントなし"
+                    ];
+                    
                     document.getElementById('loading-screen').classList.add('hidden');
                     revealNextHint();
                 } else {
                     throw new Error("AIのデータ構造が異常です。");
                 }
             } catch (e) {
+                console.error("Fetch Error:", e);
                 document.getElementById('loading-screen').classList.add('hidden');
-                alert(`エラーが発生しました: ${e.message}`);
-                location.reload();
+                alert(`エラーが発生しました。再試行します: ${e.message}`);
+                nextQuestion(); // 自動的に再試行
             }
         }
 
@@ -219,16 +231,20 @@
             if (currentHintLevel >= 3) return;
             currentHintLevel++;
             const h = document.getElementById(`hint-${currentHintLevel}`);
-            document.getElementById(`hint-${currentHintLevel}-text`).innerText = hints[currentHintLevel-1];
-            h.classList.remove('hidden');
-            setTimeout(() => h.classList.add('show'), 10);
+            const textElement = document.getElementById(`hint-${currentHintLevel}-text`);
+            
+            if (textElement) {
+                textElement.innerText = hints[currentHintLevel-1];
+                h.classList.remove('hidden');
+                // 少し遅延させてアニメーションを適用
+                setTimeout(() => h.classList.add('show'), 50);
+            }
         }
 
         function checkAnswer() {
             const input = document.getElementById('answer-input').value.trim();
             if (!input) return;
 
-            // 簡易的な表記ゆれ対応（空白削除）
             const normalize = (s) => s.replace(/\s+/g, '');
             const isCorrect = normalize(input) === normalize(targetName);
             
@@ -258,7 +274,7 @@
             document.getElementById('final-screen').classList.remove('hidden');
             document.getElementById('final-score-display').innerText = currentTotalScore;
 
-            const highScore = localStorage.getItem('quiz_high_score_pro') || 0;
+            const highScore = parseInt(localStorage.getItem('quiz_high_score_pro') || "0");
             if (currentTotalScore > highScore) {
                 localStorage.setItem('quiz_high_score_pro', currentTotalScore);
                 document.getElementById('new-record-badge').classList.remove('hidden');
