@@ -196,11 +196,11 @@
             try {
                 const response = await fetchAI({
                     contents: [{ parts: [{ text: `日本の有名人クイズ（${currentAge}代向け）を1つ作成してください。
-                    必ず以下のJSONフォーマットを遵守し、それ以外のテキストは一切含めないでください。
-                    キー名は必ず英語の小文字にしてください。
+                    必ず以下のJSONフォーマットのみを出力し、それ以外の解説などは一切含めないでください。
+                    キー名は必ず英語の小文字で "name", "hint1", "hint2", "hint3" に固定してください。
 
                     {
-                      "name": "フルネーム",
+                      "name": "フルネーム（例：木村拓哉）",
                       "hint1": "具体的な職業や肩書き",
                       "hint2": "有名な作品、受賞歴、または特徴的なエピソード",
                       "hint3": "苗字の最初の1文字"
@@ -214,12 +214,12 @@
                     const contentText = response.candidates[0].content.parts[0].text;
                     const data = JSON.parse(contentText);
                     
-                    // キー名が日本語などで返ってきた場合を考慮した抽出
+                    // AIが日本語キーで返した場合や表記ゆれも想定して抽出
                     targetName = data.name || data.名前 || "不明な有名人";
                     
-                    const h1 = data.hint1 || data.ヒント1 || data.hint_1 || "職業情報が取得できませんでした";
-                    const h2 = data.hint2 || data.ヒント2 || data.hint_2 || "エピソードが取得できませんでした";
-                    const h3 = data.hint3 || data.ヒント3 || data.hint_3 || "苗字ヒントが取得できませんでした";
+                    const h1 = data.hint1 || data.ヒント1 || data.hint_1 || "ヒントが見つかりませんでした";
+                    const h2 = data.hint2 || data.ヒント2 || data.hint_2 || "ヒントが見つかりませんでした";
+                    const h3 = data.hint3 || data.ヒント3 || data.hint_3 || "ヒントが見つかりませんでした";
 
                     hints = [h1, h2, h3];
                     
@@ -242,7 +242,8 @@
             const textElement = document.getElementById(`hint-${currentHintLevel}-text`);
             
             if (textElement) {
-                textElement.innerText = hints[currentHintLevel-1];
+                // 配列からヒントを取得してセット
+                textElement.innerText = hints[currentHintLevel-1] || "追加ヒントはありません";
                 h.classList.remove('hidden');
                 setTimeout(() => h.classList.add('show'), 50);
             }
