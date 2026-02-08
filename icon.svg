@@ -1,0 +1,32 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- 背景のグラデーション定義 -->
+<defs>
+<linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+<stop offset="0%" style="stop-color:#f97316;stop-opacity:1" />
+<stop offset="100%" style="stop-color:#ef4444;stop-opacity:1" />
+</linearGradient>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+<feDropShadow dx="0" dy="8" stdDeviation="10" flood-opacity="0.2"/>
+</filter>
+</defs>
+
+<!-- 角丸の背景 -->
+
+<rect width="512" height="512" rx="120" fill="url(#grad)" />
+
+<!-- 装飾用の円形（薄い白） -->
+
+<circle cx="450" cy="60" r="100" fill="white" fill-opacity="0.1" />
+<circle cx="50" cy="450" r="80" fill="white" fill-opacity="0.1" />
+
+<!-- メインアイコン：クエスチョンマーク -->
+
+<path d="M256 380V385M256 140C210 140 180 170 180 210H210C210 185 225 170 256 170C285 170 305 185 305 215C305 240 290 255 270 275C245 300 235 325 235 360"
+stroke="white" stroke-width="45" stroke-linecap="round" filter="url(#shadow)"/>
+<circle cx="256" cy="415" r="22" fill="white" filter="url(#shadow)"/>
+
+<!-- プレミアム感を出す王冠 -->
+
+<path d="M190 120L220 150L256 110L292 150L322 120L310 170H202L190 120Z"
+fill="#FFD700" filter="url(#shadow)"/>
+</svg>
