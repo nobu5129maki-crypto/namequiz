@@ -1,7 +1,8 @@
 export default async function handler(req, res) {
   // Vercelのダッシュボードで設定した GEMINI_API_KEY を取得
-  const apiKey = process.env.GEMINI_API_KEY;
-
+  //const apiKey = process.env.GEMINI_API_KEY;
+// テスト用：直接キーを書き込んで動くか確認する（※確認後は必ず元に戻すこと！）
+const apiKey = "あなたの本物のAPIキーをここに直接貼る";
   if (!apiKey) {
     return res.status(500).json({ error: "APIキーがVercel上で設定されていません。" });
   }
