@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>クイズ・マスターPro - 有名人名前当てクイズ</title>
+    <!-- iOSホーム画面用アイコン設定 -->
+    <link rel="apple-touch-icon" href="icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500;700&display=swap');
@@ -37,6 +39,13 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* アイコン表示用のスタイル */
+        .app-icon {
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -44,8 +53,12 @@
     <div id="app" class="w-full max-w-md quiz-card overflow-hidden">
         <!-- Header -->
         <div class="premium-grad p-8 text-white text-center shadow-lg">
-            <h1 class="text-3xl font-black tracking-tighter">クイズ・マスター Pro</h1>
-            <p class="text-orange-100 text-sm mt-2 font-medium tracking-widest uppercase">Premium Challenge Mode</p>
+            <div class="flex flex-col items-center justify-center mb-2">
+                <!-- アップロードされたicon.svgを表示 -->
+                <img src="icon.svg" alt="App Icon" class="app-icon mb-2">
+                <h1 class="text-3xl font-black tracking-tighter">クイズ・マスター Pro</h1>
+            </div>
+            <p class="text-orange-100 text-sm font-medium tracking-widest uppercase">Premium Challenge Mode</p>
         </div>
 
         <!-- Start Screen -->
