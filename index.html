@@ -183,7 +183,7 @@
          * Vercelの環境変数 GEMINI_API_KEY を参照しようとします。
          * ローカル環境や、注入されない環境では空文字になります。
          */
-        const apiKey = typeof __GEMINI_API_KEY__ !== 'undefined' ? __GEMINI_API_KEY__ : "";
+        const apiKey = typeof __NEXT_PUBLIC_GEMINI_API_KEY__ !== 'undefined' ? __NEXT_PUBLIC_GEMINI_API_KEY__ : "";
 
         let targetName = "";
         let currentTotalScore = 0;
