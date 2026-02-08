@@ -146,6 +146,7 @@
         let currentQuestionIdx = 1;
         let currentHintLevel = 0;
         let hints = [];
+        let usedNames = []; // 過去に出た名前を記録
         const MAX_QUESTIONS = 10;
         let currentAge = 20;
 
@@ -168,6 +169,7 @@
             currentAge = age;
             currentTotalScore = 0;
             currentQuestionIdx = 1;
+            usedNames = [];
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
             document.getElementById('total-score').innerText = "0";
@@ -193,9 +195,10 @@
             }
 
             try {
+                const excluded = usedNames.length > 0 ? `過去に出た名前(${usedNames.join(',')})以外で選んでください。` : "";
                 const response = await fetchAI({
-                    contents: [{ parts: [{ text: `日本の有名人クイズ（${currentAge}代向け）を1つ作成してください。
-                    必ず以下のJSONフォーマットのみを正確に出力してください。他のテキストは一切不要です。
+                    contents: [{ parts: [{ text: `日本の有名人クイズ（${currentAge}代向け）を1つ作成してください。${excluded}
+                    必ず以下のJSONフォーマットのみを正確に出力してください。
 
                     {
                       "name": "フルネーム",
@@ -213,11 +216,11 @@
                     const data = JSON.parse(contentText);
                     
                     targetName = data.name || data.名前 || "不明";
+                    usedNames.push(targetName);
                     
-                    // キーの表記ゆれに強く対応
-                    const h1 = data.hint1 || data.ヒント1 || data.hint_1 || "情報の取得に失敗しました";
-                    const h2 = data.hint2 || data.ヒント2 || data.hint_2 || "情報の取得に失敗しました";
-                    const h3 = data.hint3 || data.ヒント3 || data.hint_3 || (targetName.charAt(0) + "から始まる名前です");
+                    const h1 = data.hint1 || data.ヒント1 || "情報の取得に失敗しました";
+                    const h2 = data.hint2 || data.ヒント2 || "情報の取得に失敗しました";
+                    const h3 = data.hint3 || data.ヒント3 || (targetName.charAt(0) + "から始まる名前です");
 
                     hints = [h1, h2, h3];
                     
@@ -237,21 +240,19 @@
             const textElement = document.getElementById(`hint-${currentHintLevel}-text`);
             
             if (textElement) {
-                // ここで確実にヒントを代入
                 const text = hints[currentHintLevel-1];
                 textElement.innerText = text;
                 h.classList.remove('hidden');
-                // アニメーションのためにクラスを追加
                 setTimeout(() => h.classList.add('show'), 50);
             }
             
-            // 全てのヒントが出たらボタンを無効化
+            const nextBtn = document.getElementById('next-hint-btn');
             if (currentHintLevel === 3) {
-                document.getElementById('next-hint-btn').disabled = true;
-                document.getElementById('next-hint-btn').classList.add('opacity-50');
+                nextBtn.disabled = true;
+                nextBtn.classList.add('opacity-50');
             } else {
-                document.getElementById('next-hint-btn').disabled = false;
-                document.getElementById('next-hint-btn').classList.remove('opacity-50');
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('opacity-50');
             }
         }
 
@@ -279,6 +280,7 @@
 
         function closeModal() {
             document.getElementById('result-modal').classList.add('hidden');
+            // 正解でも不正解でも次の問題番号に進む
             currentQuestionIdx++;
             nextQuestion();
         }
