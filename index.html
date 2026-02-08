@@ -48,16 +48,16 @@
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
     <div id="app" class="w-full max-w-md quiz-card overflow-hidden">
-        <!-- ヘッダー -->
+        <!-- Header -->
         <div class="premium-grad p-8 text-white text-center shadow-lg">
             <div class="flex flex-col items-center justify-center space-y-4">
-                <img src="icon.svg" alt="アプリのアイコン" class="app-icon" onerror="this.src='https://via.placeholder.com/80?text=Quiz'">
+                <img src="https://via.placeholder.com/80?text=Quiz" alt="App Icon" class="app-icon" onerror="this.src='https://via.placeholder.com/80?text=Quiz'">
                 <h1 class="text-3xl font-black tracking-tighter">クイズ・マスター Pro</h1>
             </div>
             <p class="text-orange-100 text-sm mt-2 font-medium tracking-widest uppercase">Premium Edition</p>
         </div>
 
-        <!-- スタート画面 -->
+        <!-- Start Screen -->
         <div id="start-screen" class="p-10 space-y-8 text-center">
             <div class="space-y-6">
                 <div class="bg-orange-50 p-6 rounded-[2rem] border border-orange-100">
@@ -78,25 +78,22 @@
                 <button onclick="startGame(40)" class="bg-white hover:bg-orange-500 hover:text-white text-orange-600 py-4 rounded-2xl font-bold border-2 border-orange-500 transition-all shadow-sm active:scale-95">40代</button>
                 <button onclick="startGame(50)" class="bg-white hover:bg-orange-500 hover:text-white text-orange-600 py-4 rounded-2xl font-bold border-2 border-orange-500 transition-all shadow-sm active:scale-95">50代以上</button>
             </div>
-            <!-- 履歴ボタン -->
             <button onclick="showHistory()" class="w-full mt-4 text-slate-400 text-sm font-bold flex items-center justify-center gap-2 py-2 hover:text-orange-500 transition">
                 <span>📖</span> 過去に正解した有名人リスト
             </button>
         </div>
 
-        <!-- 履歴画面 -->
+        <!-- History Screen -->
         <div id="history-screen" class="hidden p-8 space-y-6 max-h-[600px] overflow-y-auto">
             <div class="flex justify-between items-center border-b pb-4">
                 <h2 class="text-xl font-black text-slate-800 tracking-tighter">正解コレクション</h2>
                 <button onclick="backToTitle()" class="text-slate-400 hover:text-red-500 text-2xl">×</button>
             </div>
-            <div id="history-list" class="space-y-3">
-                <!-- 履歴が動的に追加される -->
-            </div>
+            <div id="history-list" class="space-y-3"></div>
             <button onclick="backToTitle()" class="w-full bg-slate-100 py-4 rounded-2xl font-bold text-slate-500 active:scale-95">戻る</button>
         </div>
 
-        <!-- ゲーム画面 -->
+        <!-- Game Screen -->
         <div id="game-screen" class="hidden p-8 space-y-8">
             <div class="flex justify-between items-end border-b border-gray-100 pb-4">
                 <div>
@@ -109,7 +106,6 @@
                 </div>
             </div>
 
-            <!-- ヒントエリア -->
             <div id="hints-container" class="space-y-4 min-h-[320px]">
                 <div id="hint-1" class="hint-item bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-2xl hidden">
                     <span class="inline-block px-2 py-1 bg-blue-500 text-white text-[10px] font-bold rounded mb-2">第1ヒント (100点)</span>
@@ -125,23 +121,25 @@
                 </div>
             </div>
 
-            <!-- 回答入力 -->
             <div class="space-y-4 pt-6">
                 <input type="text" id="answer-input" placeholder="ここにお名前を入力" autocomplete="off"
                        class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-orange-400 focus:bg-white outline-none text-center text-xl font-black transition-all shadow-inner">
-                
                 <div class="flex gap-4">
-                    <button id="next-hint-btn" onclick="revealNextHint()" class="flex-1 bg-white border-2 border-slate-200 text-slate-600 hover:border-orange-500 hover:text-orange-500 font-bold py-5 rounded-2xl transition-all active:scale-95">
-                        次のヒント
-                    </button>
-                    <button id="submit-btn" onclick="checkAnswer()" class="flex-[1.5] premium-grad text-white font-black py-5 rounded-2xl shadow-xl transition-all active:scale-95">
-                        回答を確定する
-                    </button>
+                    <button id="next-hint-btn" onclick="revealNextHint()" class="flex-1 bg-white border-2 border-slate-200 text-slate-600 hover:border-orange-500 hover:text-orange-500 font-bold py-5 rounded-2xl transition-all active:scale-95">次のヒント</button>
+                    <button id="submit-btn" onclick="checkAnswer()" class="flex-[1.5] premium-grad text-white font-black py-5 rounded-2xl shadow-xl transition-all active:scale-95">回答を確定する</button>
                 </div>
             </div>
         </div>
 
-        <!-- 結果モーダル -->
+        <!-- Alert Modal -->
+        <div id="message-box" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-6">
+            <div class="bg-white rounded-3xl p-8 w-full max-w-sm text-center space-y-4 shadow-2xl">
+                <p id="message-text" class="text-slate-700 font-bold"></p>
+                <button onclick="closeMessageBox()" class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold">閉じる</button>
+            </div>
+        </div>
+
+        <!-- Result Modal -->
         <div id="result-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-6">
             <div class="bg-white rounded-[3rem] p-10 w-full max-w-xs text-center space-y-6 shadow-2xl">
                 <div id="result-emoji" class="text-8xl"></div>
@@ -157,34 +155,32 @@
             </div>
         </div>
 
-        <!-- 最終スコア画面 -->
+        <!-- Final Score Screen -->
         <div id="final-screen" class="hidden p-10 text-center space-y-10">
             <div class="space-y-2">
                 <div class="text-7xl mb-4">👑</div>
                 <h2 class="text-4xl font-black text-slate-800 tracking-tighter">終了です！</h2>
                 <p class="text-slate-500">10問の挑戦が終わりました。</p>
             </div>
-            
             <div class="relative py-10 bg-slate-50 rounded-[3rem]">
                 <p class="text-7xl font-black text-orange-600 font-sans" id="final-score-display">0</p>
                 <p class="text-xs font-bold text-orange-400 mt-2 tracking-widest uppercase">Total Points</p>
                 <div id="new-record-badge" class="hidden absolute -top-4 -right-4 bg-red-500 text-white text-[10px] font-black px-4 py-2 rounded-full shadow-lg rotate-12 animate-pulse">最高記録更新！</div>
             </div>
-
-            <button onclick="backToTitle()" class="w-full bg-slate-800 text-white py-6 rounded-2xl font-black shadow-2xl transition active:scale-95 uppercase tracking-widest">
-                タイトルに戻る
-            </button>
+            <button onclick="backToTitle()" class="w-full bg-slate-800 text-white py-6 rounded-2xl font-black shadow-2xl transition active:scale-95 uppercase tracking-widest">タイトルに戻る</button>
         </div>
     </div>
 
-    <!-- ロード画面 -->
+    <!-- Loading Screen -->
     <div id="loading-screen" class="hidden fixed inset-0 bg-white/95 z-50 flex flex-col items-center justify-center">
         <div class="loading-spinner"></div>
         <p class="mt-6 font-black text-orange-600 uppercase tracking-widest text-xs">問題を生成しています...</p>
     </div>
 
     <script>
-        const apiKey = ""; // Vercelの環境変数 GEMINI_API_KEY が実行時に注入されます
+        // Use environment variable from Vercel if available, otherwise fallback to empty string
+        // The __GEMINI_API_KEY__ is a placeholder that can be replaced during build or injected by the platform.
+        const apiKey = typeof __GEMINI_API_KEY__ !== 'undefined' ? __GEMINI_API_KEY__ : "";
 
         let targetName = "";
         let currentTotalScore = 0;
@@ -195,12 +191,23 @@
         const MAX_QUESTIONS = 10;
         let currentAge = 20;
 
-        // ハイスコアの取得
+        function showMessage(text) {
+            document.getElementById('message-text').innerText = text;
+            document.getElementById('message-box').classList.remove('hidden');
+        }
+
+        function closeMessageBox() {
+            document.getElementById('message-box').classList.add('hidden');
+        }
+
         let highScore = localStorage.getItem('quiz_high_score_pro') || 0;
         document.getElementById('high-score-display').innerText = highScore;
 
-        // API通信関数（リトライ機能付き）
         async function fetchAI(url, body) {
+            if (!apiKey) {
+                throw new Error("APIキーが設定されていません。Vercelの環境変数 GEMINI_API_KEY を設定してください。");
+            }
+            
             const maxRetries = 5;
             for (let i = 0; i < maxRetries; i++) {
                 try {
@@ -209,7 +216,12 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(body)
                     });
+                    
                     if (res.ok) return await res.json();
+                    
+                    if (res.status === 401 || res.status === 403) {
+                        throw new Error("APIキーが無効です。設定を確認してください。");
+                    }
                 } catch (e) {
                     if (i === maxRetries - 1) throw e;
                 }
@@ -221,7 +233,7 @@
             currentAge = age;
             currentTotalScore = 0;
             currentQuestionIdx = 1;
-            pastCelebrities = []; // ゲーム開始時に履歴をリセット（重複防止用）
+            pastCelebrities = [];
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('final-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
@@ -273,7 +285,9 @@
                 loader.classList.add('hidden');
                 revealNextHint();
             } catch (e) {
-                setTimeout(nextQuestion, 2000);
+                loader.classList.add('hidden');
+                showMessage(`エラーが発生しました: ${e.message}`);
+                backToTitle();
             }
         }
 
@@ -284,7 +298,6 @@
             document.getElementById(`hint-${currentHintLevel}-text`).innerText = hints[currentHintLevel - 1];
             hintElem.classList.remove('hidden');
             setTimeout(() => hintElem.classList.add('show'), 50);
-
             if (currentHintLevel === 3) document.getElementById('next-hint-btn').disabled = true;
         }
 
@@ -344,7 +357,6 @@
                     listElem.appendChild(div);
                 });
             }
-            
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('history-screen').classList.remove('hidden');
         }
