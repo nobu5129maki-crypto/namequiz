@@ -37,12 +37,6 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .app-icon {
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -50,92 +44,49 @@
     <div id="app" class="w-full max-w-md quiz-card overflow-hidden">
         <!-- Header -->
         <div class="premium-grad p-8 text-white text-center shadow-lg">
-            <div class="flex flex-col items-center justify-center space-y-4">
-                <img src="https://via.placeholder.com/80?text=Quiz" alt="App Icon" class="app-icon" onerror="this.src='https://via.placeholder.com/80?text=Quiz'">
-                <h1 class="text-3xl font-black tracking-tighter">クイズ・マスター Pro</h1>
-            </div>
-            <p class="text-orange-100 text-sm mt-2 font-medium tracking-widest uppercase">Premium Edition</p>
+            <h1 class="text-3xl font-black tracking-tighter">クイズ・マスター Pro</h1>
+            <p class="text-orange-100 text-sm mt-2 font-medium tracking-widest uppercase">Server-Side Protected</p>
         </div>
 
         <!-- Start Screen -->
         <div id="start-screen" class="p-10 space-y-8 text-center">
-            <div class="space-y-6">
-                <div class="bg-orange-50 p-6 rounded-[2rem] border border-orange-100">
-                    <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">あなたの最高スコア</p>
-                    <p class="text-4xl font-black text-orange-600 font-sans"><span id="high-score-display">0</span> <span class="text-base font-normal">点</span></p>
-                </div>
-                <div class="space-y-2">
-                    <p class="text-gray-700 font-bold text-lg text-orange-600">10問連続チャレンジ</p>
-                    <p class="text-gray-400 text-xs leading-relaxed">
-                        少ないヒントで正解して、最高ランクを目指しましょう！<br>
-                        得意な年代を選択してスタートしてください。
-                    </p>
-                </div>
+            <div class="bg-orange-50 p-6 rounded-[2rem] border border-orange-100">
+                <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">あなたの最高スコア</p>
+                <p class="text-4xl font-black text-orange-600 font-sans"><span id="high-score-display">0</span> <span class="text-base font-normal">点</span></p>
             </div>
             <div class="grid grid-cols-2 gap-4">
-                <button onclick="startGame(20)" class="bg-white hover:bg-orange-500 hover:text-white text-orange-600 py-4 rounded-2xl font-bold border-2 border-orange-500 transition-all shadow-sm active:scale-95">20代</button>
-                <button onclick="startGame(30)" class="bg-white hover:bg-orange-500 hover:text-white text-orange-600 py-4 rounded-2xl font-bold border-2 border-orange-500 transition-all shadow-sm active:scale-95">30代</button>
-                <button onclick="startGame(40)" class="bg-white hover:bg-orange-500 hover:text-white text-orange-600 py-4 rounded-2xl font-bold border-2 border-orange-500 transition-all shadow-sm active:scale-95">40代</button>
-                <button onclick="startGame(50)" class="bg-white hover:bg-orange-500 hover:text-white text-orange-600 py-4 rounded-2xl font-bold border-2 border-orange-500 transition-all shadow-sm active:scale-95">50代以上</button>
+                <button onclick="startGame(20)" class="bg-white border-2 border-orange-500 text-orange-600 py-4 rounded-2xl font-bold hover:bg-orange-500 hover:text-white transition shadow-sm active:scale-95">20代</button>
+                <button onclick="startGame(30)" class="bg-white border-2 border-orange-500 text-orange-600 py-4 rounded-2xl font-bold hover:bg-orange-500 hover:text-white transition shadow-sm active:scale-95">30代</button>
+                <button onclick="startGame(40)" class="bg-white border-2 border-orange-500 text-orange-600 py-4 rounded-2xl font-bold hover:bg-orange-500 hover:text-white transition shadow-sm active:scale-95">40代</button>
+                <button onclick="startGame(50)" class="bg-white border-2 border-orange-500 text-orange-600 py-4 rounded-2xl font-bold hover:bg-orange-500 hover:text-white transition shadow-sm active:scale-95">50代以上</button>
             </div>
-            <button onclick="showHistory()" class="w-full mt-4 text-slate-400 text-sm font-bold flex items-center justify-center gap-2 py-2 hover:text-orange-500 transition">
-                <span>📖</span> 過去に正解した有名人リスト
-            </button>
-        </div>
-
-        <!-- History Screen -->
-        <div id="history-screen" class="hidden p-8 space-y-6 max-h-[600px] overflow-y-auto">
-            <div class="flex justify-between items-center border-b pb-4">
-                <h2 class="text-xl font-black text-slate-800 tracking-tighter">正解コレクション</h2>
-                <button onclick="backToTitle()" class="text-slate-400 hover:text-red-500 text-2xl">×</button>
-            </div>
-            <div id="history-list" class="space-y-3"></div>
-            <button onclick="backToTitle()" class="w-full bg-slate-100 py-4 rounded-2xl font-bold text-slate-500 active:scale-95">戻る</button>
         </div>
 
         <!-- Game Screen -->
         <div id="game-screen" class="hidden p-8 space-y-8">
-            <div class="flex justify-between items-end border-b border-gray-100 pb-4">
-                <div>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">合計スコア</p>
-                    <p id="total-score" class="text-3xl font-black text-orange-600 font-sans leading-none">0</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">進捗</p>
-                    <p class="text-lg font-bold text-gray-600">第 <span id="current-idx-display">1</span> / 10 問</p>
-                </div>
+            <div class="flex justify-between border-b border-gray-100 pb-4">
+                <p id="total-score" class="text-3xl font-black text-orange-600">0</p>
+                <p class="text-lg font-bold text-gray-600">第 <span id="current-idx-display">1</span> / 10 問</p>
             </div>
 
             <div id="hints-container" class="space-y-4 min-h-[320px]">
                 <div id="hint-1" class="hint-item bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-2xl hidden">
-                    <span class="inline-block px-2 py-1 bg-blue-500 text-white text-[10px] font-bold rounded mb-2">第1ヒント (100点)</span>
-                    <p id="hint-1-text" class="text-blue-900 font-bold leading-relaxed"></p>
+                    <p id="hint-1-text" class="text-blue-900 font-bold"></p>
                 </div>
                 <div id="hint-2" class="hint-item bg-purple-50 border-l-4 border-purple-500 p-5 rounded-r-2xl hidden">
-                    <span class="inline-block px-2 py-1 bg-purple-500 text-white text-[10px] font-bold rounded mb-2">第2ヒント (50点)</span>
-                    <p id="hint-2-text" class="text-purple-900 font-bold leading-relaxed"></p>
+                    <p id="hint-2-text" class="text-purple-900 font-bold"></p>
                 </div>
                 <div id="hint-3" class="hint-item bg-yellow-50 border-l-4 border-yellow-500 p-5 rounded-r-2xl hidden">
-                    <span class="inline-block px-2 py-1 bg-yellow-500 text-yellow-900 text-[10px] font-bold rounded mb-2">第3ヒント (30点)</span>
-                    <p id="hint-3-text" class="text-yellow-900 font-bold leading-relaxed"></p>
+                    <p id="hint-3-text" class="text-yellow-900 font-bold"></p>
                 </div>
             </div>
 
             <div class="space-y-4 pt-6">
-                <input type="text" id="answer-input" placeholder="ここにお名前を入力" autocomplete="off"
-                       class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-orange-400 focus:bg-white outline-none text-center text-xl font-black transition-all shadow-inner">
+                <input type="text" id="answer-input" placeholder="ここにお名前を入力" class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-orange-400 focus:bg-white outline-none text-center text-xl font-black transition shadow-inner">
                 <div class="flex gap-4">
-                    <button id="next-hint-btn" onclick="revealNextHint()" class="flex-1 bg-white border-2 border-slate-200 text-slate-600 hover:border-orange-500 hover:text-orange-500 font-bold py-5 rounded-2xl transition-all active:scale-95">次のヒント</button>
-                    <button id="submit-btn" onclick="checkAnswer()" class="flex-[1.5] premium-grad text-white font-black py-5 rounded-2xl shadow-xl transition-all active:scale-95">回答を確定する</button>
+                    <button id="next-hint-btn" onclick="revealNextHint()" class="flex-1 bg-white border-2 border-slate-200 text-slate-600 font-bold py-5 rounded-2xl transition active:scale-95">ヒント</button>
+                    <button id="submit-btn" onclick="checkAnswer()" class="flex-[1.5] premium-grad text-white font-black py-5 rounded-2xl shadow-xl transition active:scale-95">回答確定</button>
                 </div>
-            </div>
-        </div>
-
-        <!-- Alert Modal -->
-        <div id="message-box" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-6">
-            <div class="bg-white rounded-3xl p-8 w-full max-w-sm text-center space-y-4 shadow-2xl">
-                <p id="message-text" class="text-slate-700 font-bold"></p>
-                <button onclick="closeMessageBox()" class="w-full bg-slate-800 text-white py-3 rounded-xl font-bold">閉じる</button>
             </div>
         </div>
 
@@ -143,12 +94,9 @@
         <div id="result-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-6">
             <div class="bg-white rounded-[3rem] p-10 w-full max-w-xs text-center space-y-6 shadow-2xl">
                 <div id="result-emoji" class="text-8xl"></div>
-                <div>
-                    <h2 id="result-title" class="text-4xl font-black"></h2>
-                    <p id="earned-points" class="text-orange-600 font-black mt-2 text-xl"></p>
-                </div>
+                <h2 id="result-title" class="text-2xl font-black"></h2>
                 <div class="p-5 bg-slate-50 rounded-2xl">
-                    <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">正解はこちら</p>
+                    <p class="text-gray-400 text-[10px] font-bold uppercase mb-1">正解</p>
                     <span id="correct-name" class="text-2xl font-black text-slate-800"></span>
                 </div>
                 <button id="modal-next-btn" onclick="closeModal()" class="w-full premium-grad text-white py-5 rounded-2xl font-black shadow-lg transition active:scale-95">次へ進む</button>
@@ -159,77 +107,50 @@
         <div id="final-screen" class="hidden p-10 text-center space-y-10">
             <div class="space-y-2">
                 <div class="text-7xl mb-4">👑</div>
-                <h2 class="text-4xl font-black text-slate-800 tracking-tighter">終了です！</h2>
-                <p class="text-slate-500">10問の挑戦が終わりました。</p>
+                <h2 class="text-4xl font-black">終了！</h2>
             </div>
-            <div class="relative py-10 bg-slate-50 rounded-[3rem]">
-                <p class="text-7xl font-black text-orange-600 font-sans" id="final-score-display">0</p>
-                <p class="text-xs font-bold text-orange-400 mt-2 tracking-widest uppercase">Total Points</p>
-                <div id="new-record-badge" class="hidden absolute -top-4 -right-4 bg-red-500 text-white text-[10px] font-black px-4 py-2 rounded-full shadow-lg rotate-12 animate-pulse">最高記録更新！</div>
+            <div class="py-10 bg-slate-50 rounded-[3rem]">
+                <p class="text-7xl font-black text-orange-600" id="final-score-display">0</p>
+                <p class="text-xs font-bold text-orange-400 mt-2 uppercase">Total Points</p>
             </div>
-            <button onclick="backToTitle()" class="w-full bg-slate-800 text-white py-6 rounded-2xl font-black shadow-2xl transition active:scale-95 uppercase tracking-widest">タイトルに戻る</button>
+            <button onclick="location.reload()" class="w-full bg-slate-800 text-white py-6 rounded-2xl font-black shadow-2xl transition active:scale-95">タイトルに戻る</button>
         </div>
     </div>
 
     <!-- Loading Screen -->
     <div id="loading-screen" class="hidden fixed inset-0 bg-white/95 z-50 flex flex-col items-center justify-center">
         <div class="loading-spinner"></div>
-        <p class="mt-6 font-black text-orange-600 uppercase tracking-widest text-xs">問題を生成しています...</p>
+        <p class="mt-6 font-black text-orange-600 text-xs">AIが問題を生成しています...</p>
     </div>
 
     <script>
-        /**
-         * APIキーの設定について:
-         * Vercelの環境変数 GEMINI_API_KEY を参照しようとします。
-         * ローカル環境や、注入されない環境では空文字になります。
-         */
-        const apiKey = typeof __GEMINI_API_KEY__ !== 'undefined' ? __GEMINI_API_KEY__ : "";
-
         let targetName = "";
         let currentTotalScore = 0;
         let currentQuestionIdx = 1;
         let currentHintLevel = 0;
         let hints = [];
-        let pastCelebrities = [];
         const MAX_QUESTIONS = 10;
         let currentAge = 20;
 
-        function showMessage(text) {
-            document.getElementById('message-text').innerText = text;
-            document.getElementById('message-box').classList.remove('hidden');
-        }
-
-        function closeMessageBox() {
-            document.getElementById('message-box').classList.add('hidden');
-        }
-
-        let highScore = localStorage.getItem('quiz_high_score_pro') || 0;
-        document.getElementById('high-score-display').innerText = highScore;
-
-        async function fetchAI(url, body) {
-            // apiKeyが空の場合のチェック
-            if (!apiKey || apiKey === "") {
-                throw new Error("APIキーが設定されていません。Vercelの環境変数 GEMINI_API_KEY に値を設定してください。");
-            }
-            
-            const maxRetries = 5;
+        // 【修正ポイント】APIキーをブラウザ側で持たず、Vercelのサーバーレス関数に任せる
+        async function fetchAI(body) {
+            const maxRetries = 3;
             for (let i = 0; i < maxRetries; i++) {
                 try {
-                    const res = await fetch(`${url}?key=${apiKey}`, {
+                    // 自前のAPIエンドポイント（/api/quiz）を叩く
+                    const res = await fetch('/api/quiz', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(body)
                     });
                     
                     if (res.ok) return await res.json();
-                    
-                    if (res.status === 401 || res.status === 403) {
-                        throw new Error("APIキーが無効です。Vercelの設定画面で正しいキーが入力されているか確認してください。");
-                    }
+                    const errorData = await res.json();
+                    throw new Error(errorData.error || "通信エラー");
                 } catch (e) {
                     if (i === maxRetries - 1) throw e;
+                    await new Promise(r => setTimeout(r, 1000));
                 }
-                await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
             }
         }
 
@@ -237,11 +158,8 @@
             currentAge = age;
             currentTotalScore = 0;
             currentQuestionIdx = 1;
-            pastCelebrities = [];
             document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('final-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
-            document.getElementById('total-score').innerText = "0";
             nextQuestion();
         }
 
@@ -251,58 +169,38 @@
                 return;
             }
 
-            const loader = document.getElementById('loading-screen');
-            loader.classList.remove('hidden');
-            
+            document.getElementById('loading-screen').classList.remove('hidden');
             currentHintLevel = 0;
-            for(let i=1; i<=3; i++) {
-                const h = document.getElementById(`hint-${i}`);
-                h.classList.add('hidden');
-                h.classList.remove('show');
-            }
-            document.getElementById('next-hint-btn').disabled = false;
             document.getElementById('answer-input').value = "";
             document.getElementById('current-idx-display').innerText = currentQuestionIdx;
+            
+            for(let i=1; i<=3; i++) document.getElementById(`hint-${i}`).classList.add('hidden');
 
             try {
-                const excluded = pastCelebrities.length > 0 ? `過去に出題した人: ${pastCelebrities.join(', ')}。これらとは別の人を選んでください。` : "";
-                const response = await fetchAI(
-                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent`,
-                    {
-                        contents: [{ parts: [{ text: `あなたはプロのクイズ制作作家です。${currentAge}代の日本人に非常に有名な人物（存命・故人問わず）を1人選び、3段階のクイズを作成してください。
-                        ${excluded}
-                        【ヒントの作り方】
-                        1. ヒント1(100点): 職業や主要な功績（名前を推測できるギリギリの抽象度で）
-                        2. ヒント2(50点): 具体的な代表作品や有名なエピソード
-                        3. ヒント3(30点): 名字の最初の1文字（例：名字が「佐藤」なら「さ」から始まる）
-                        
-                        JSON形式のみで出力：{"name": "フルネーム", "hint1": "...", "hint2": "...", "hint3": "..."}` }] }],
-                        generationConfig: { responseMimeType: "application/json" }
-                    }
-                );
+                const response = await fetchAI({
+                    contents: [{ parts: [{ text: `${currentAge}代に非常に有名な日本の有名人を1人選び、クイズを作成してください。JSONのみ：{"name":"名前","hint1":"第1ヒント(職業)","hint2":"第2ヒント(代表作)","hint3":"第3ヒント(名字の一文字)"}` }] }],
+                    generationConfig: { responseMimeType: "application/json" }
+                });
                 
                 const data = JSON.parse(response.candidates[0].content.parts[0].text);
                 targetName = data.name;
                 hints = [data.hint1, data.hint2, data.hint3];
-                pastCelebrities.push(targetName);
-
-                loader.classList.add('hidden');
+                document.getElementById('loading-screen').classList.add('hidden');
                 revealNextHint();
             } catch (e) {
-                loader.classList.add('hidden');
-                showMessage(`エラーが発生しました: ${e.message}`);
-                backToTitle();
+                document.getElementById('loading-screen').classList.add('hidden');
+                alert(`エラー: ${e.message}`);
+                location.reload();
             }
         }
 
         function revealNextHint() {
             if (currentHintLevel >= 3) return;
             currentHintLevel++;
-            const hintElem = document.getElementById(`hint-${currentHintLevel}`);
-            document.getElementById(`hint-${currentHintLevel}-text`).innerText = hints[currentHintLevel - 1];
-            hintElem.classList.remove('hidden');
-            setTimeout(() => hintElem.classList.add('show'), 50);
-            if (currentHintLevel === 3) document.getElementById('next-hint-btn').disabled = true;
+            const h = document.getElementById(`hint-${currentHintLevel}`);
+            document.getElementById(`hint-${currentHintLevel}-text`).innerText = hints[currentHintLevel-1];
+            h.classList.remove('hidden');
+            setTimeout(() => h.classList.add('show'), 50);
         }
 
         function checkAnswer() {
@@ -312,24 +210,18 @@
             const normalize = (s) => s.replace(/\s+/g, '').replace(/[ぁ-ん]/g, m => String.fromCharCode(m.charCodeAt(0) + 0x60));
             const isCorrect = normalize(input) === normalize(targetName);
             
-            const modal = document.getElementById('result-modal');
-            let points = 0;
             if (isCorrect) {
-                points = currentHintLevel === 1 ? 100 : (currentHintLevel === 2 ? 50 : 30);
-                currentTotalScore += points;
+                let pts = currentHintLevel === 1 ? 100 : (currentHintLevel === 2 ? 50 : 30);
+                currentTotalScore += pts;
                 document.getElementById('total-score').innerText = currentTotalScore;
                 document.getElementById('result-emoji').innerText = "🎉";
                 document.getElementById('result-title').innerText = "正解です！";
-                document.getElementById('earned-points').innerText = `+${points} ポイント獲得`;
-                saveToHistory(targetName); 
             } else {
                 document.getElementById('result-emoji').innerText = "❌";
                 document.getElementById('result-title').innerText = "残念...";
-                document.getElementById('earned-points').innerText = "0 ポイント";
             }
             document.getElementById('correct-name').innerText = targetName;
-            modal.classList.remove('hidden');
-            document.getElementById('modal-next-btn').innerText = currentQuestionIdx === MAX_QUESTIONS ? "最終結果を見る" : "次の問題へ";
+            document.getElementById('result-modal').classList.remove('hidden');
         }
 
         function closeModal() {
@@ -338,54 +230,18 @@
             nextQuestion();
         }
 
-        function saveToHistory(name) {
-            let history = JSON.parse(localStorage.getItem('quiz_history_pro') || '[]');
-            if (!history.includes(name)) {
-                history.push(name);
-                localStorage.setItem('quiz_history_pro', JSON.stringify(history));
-            }
-        }
-
-        function showHistory() {
-            const history = JSON.parse(localStorage.getItem('quiz_history_pro') || '[]');
-            const listElem = document.getElementById('history-list');
-            listElem.innerHTML = '';
-            
-            if (history.length === 0) {
-                listElem.innerHTML = '<p class="text-slate-400 text-center py-10">まだ正解した有名人がいません。</p>';
-            } else {
-                history.forEach(name => {
-                    const div = document.createElement('div');
-                    div.className = 'bg-slate-50 p-4 rounded-xl font-bold text-slate-700 border border-slate-100 flex justify-between items-center';
-                    div.innerHTML = `<span>${name}</span><span class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-md">Collected</span>`;
-                    listElem.appendChild(div);
-                });
-            }
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('history-screen').classList.remove('hidden');
-        }
-
-        function backToTitle() {
-            document.getElementById('history-screen').classList.add('hidden');
-            document.getElementById('game-screen').classList.add('hidden');
-            document.getElementById('final-screen').classList.add('hidden');
-            document.getElementById('start-screen').classList.remove('hidden');
-            document.getElementById('high-score-display').innerText = localStorage.getItem('quiz_high_score_pro') || 0;
-        }
-
         function showFinalResult() {
             document.getElementById('game-screen').classList.add('hidden');
             document.getElementById('final-screen').classList.remove('hidden');
             document.getElementById('final-score-display').innerText = currentTotalScore;
-
-            if (currentTotalScore > highScore) {
+            
+            const oldHigh = localStorage.getItem('quiz_high_score_pro') || 0;
+            if (currentTotalScore > oldHigh) {
                 localStorage.setItem('quiz_high_score_pro', currentTotalScore);
-                document.getElementById('new-record-badge').classList.remove('hidden');
-                highScore = currentTotalScore;
-            } else {
-                document.getElementById('new-record-badge').classList.add('hidden');
             }
         }
+
+        document.getElementById('high-score-display').innerText = localStorage.getItem('quiz_high_score_pro') || 0;
     </script>
 </body>
 </html>
