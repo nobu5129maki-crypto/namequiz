@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -21,14 +21,21 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // デバッグ用：構造が違う場合にエラーを特定しやすくする
+    if (!response.ok) {
+      const msg = data?.error?.message || data?.error || "APIエラー";
+      console.error("Gemini API Error:", data);
+      return res.status(response.status).json({ error: msg });
+    }
+
     if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
       console.error("Gemini API Error Response:", data);
-      return res.status(500).json({ error: "AIからの応答が不正です。APIキーの権限やモデル名を確認してください。" });
+      const msg = data?.error?.message || "AIからの応答が不正です。";
+      return res.status(500).json({ error: msg });
     }
 
     return res.status(200).json(data);
   } catch (error) {
-    return res.status(500).json({ error: "サーバー通信エラーが発生しました。" });
+    console.error("Quiz API Error:", error);
+    return res.status(500).json({ error: error.message || "サーバー通信エラーが発生しました。" });
   }
 }
