@@ -153,6 +153,19 @@
         <p class="mt-6 font-black text-orange-600 uppercase tracking-widest text-xs">AIが問題を生成しています...</p>
     </div>
 
+    <!-- Error Screen (API失敗時) -->
+    <div id="error-screen" class="hidden fixed inset-0 bg-white/95 z-50 flex flex-col items-center justify-center p-6">
+        <div class="text-center space-y-6 max-w-sm">
+            <div class="text-6xl">⚠️</div>
+            <h2 class="text-xl font-black text-slate-800">問題の取得に失敗しました</h2>
+            <p id="error-message" class="text-slate-500 text-sm"></p>
+            <div class="flex gap-4">
+                <button onclick="retryQuestion()" class="flex-1 bg-orange-500 text-white py-4 rounded-2xl font-bold active:scale-95">再試行</button>
+                <button onclick="goBackToStart()" class="flex-1 bg-slate-200 text-slate-700 py-4 rounded-2xl font-bold active:scale-95">タイトルに戻る</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let targetName = "";
         let currentTotalScore = 0;
@@ -163,17 +176,25 @@
         const MAX_QUESTIONS = 10;
         let currentAge = 20;
 
+        const FETCH_TIMEOUT_MS = 30000; // 30秒でタイムアウト
+
         async function fetchAI(body) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
             try {
                 const res = await fetch('/api/quiz', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify(body),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || "通信エラー");
                 return data;
             } catch (e) {
+                clearTimeout(timeoutId);
+                if (e.name === 'AbortError') throw new Error("タイムアウトしました。しばらくしてから再試行してください。");
                 throw e;
             }
         }
@@ -225,7 +246,8 @@
                 });
                 
                 if (response.candidates && response.candidates[0]) {
-                    const contentText = response.candidates[0].content.parts[0].text;
+                    const contentText = response.candidates[0].content?.parts?.[0]?.text;
+                    if (!contentText) throw new Error("AIからの応答形式が不正です。");
                     const data = JSON.parse(contentText);
                     
                     targetName = data.name || data.名前 || "不明";
@@ -239,11 +261,26 @@
                     
                     document.getElementById('loading-screen').classList.add('hidden');
                     revealNextHint();
+                } else {
+                    throw new Error("AIからの応答が不正です。");
                 }
             } catch (e) {
                 console.error("Fetch Error:", e);
-                setTimeout(() => nextQuestion(), 1000);
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('error-message').innerText = e.message || "通信エラーが発生しました。";
+                document.getElementById('error-screen').classList.remove('hidden');
             }
+        }
+
+        function retryQuestion() {
+            document.getElementById('error-screen').classList.add('hidden');
+            nextQuestion();
+        }
+
+        function goBackToStart() {
+            document.getElementById('error-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
         }
 
         function revealNextHint() {
