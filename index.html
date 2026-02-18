@@ -155,9 +155,10 @@
         </div>
         <div id="loading-error" class="hidden text-center max-w-sm">
             <p class="text-red-600 font-bold mb-2">問題の取得に失敗しました</p>
-            <p id="error-message" class="text-sm text-gray-600 mb-6"></p>
+            <p id="error-message" class="text-sm text-gray-600 mb-2"></p>
+            <p id="retry-countdown" class="hidden text-orange-600 font-bold mb-4"></p>
             <div class="flex gap-4 justify-center">
-                <button onclick="retryQuestion()" class="px-6 py-3 bg-orange-500 text-white font-bold rounded-xl">再試行</button>
+                <button id="retry-btn" onclick="retryQuestion()" class="px-6 py-3 bg-orange-500 text-white font-bold rounded-xl">再試行</button>
                 <button onclick="goBackToStart()" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl">タイトルに戻る</button>
             </div>
         </div>
@@ -172,6 +173,7 @@
         let usedNames = []; // 過去に出た名前を記録
         const MAX_QUESTIONS = 10;
         let currentAge = 20;
+        let quotaRetryTimer = null;
 
         async function fetchAI(body) {
             const ctrl = new AbortController();
@@ -265,13 +267,46 @@
                 console.error("Fetch Error:", e);
                 document.getElementById('loading-content').classList.add('hidden');
                 document.getElementById('loading-error').classList.remove('hidden');
-                document.getElementById('error-message').innerText = e.message || "通信エラーが発生しました";
+                const errMsg = e.message || "通信エラーが発生しました";
+                document.getElementById('error-message').innerText = errMsg.includes("quota") || errMsg.includes("Quota") 
+                    ? "無料枠の利用制限に達しました。" 
+                    : errMsg;
+                
+                const retryMatch = errMsg.match(/retry in (\d+(?:\.\d+)?)s/i);
+                const retrySec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 0;
+                const countdownEl = document.getElementById('retry-countdown');
+                const retryBtn = document.getElementById('retry-btn');
+                
+                if (retrySec > 0) {
+                    retryBtn.disabled = true;
+                    countdownEl.classList.remove('hidden');
+                    let remaining = retrySec;
+                    countdownEl.innerText = `${remaining}秒後に自動で再試行します...`;
+                    if (quotaRetryTimer) clearInterval(quotaRetryTimer);
+                    quotaRetryTimer = setInterval(() => {
+                        remaining--;
+                        countdownEl.innerText = remaining > 0 ? `${remaining}秒後に自動で再試行します...` : "再試行中...";
+                        if (remaining <= 0) {
+                            clearInterval(quotaRetryTimer);
+                            quotaRetryTimer = null;
+                            retryBtn.disabled = false;
+                            countdownEl.classList.add('hidden');
+                            retryQuestion();
+                        }
+                    }, 1000);
+                }
             }
         }
 
         function retryQuestion() {
+            if (quotaRetryTimer) {
+                clearInterval(quotaRetryTimer);
+                quotaRetryTimer = null;
+            }
             document.getElementById('loading-content').classList.remove('hidden');
             document.getElementById('loading-error').classList.add('hidden');
+            document.getElementById('retry-countdown').classList.add('hidden');
+            document.getElementById('retry-btn').disabled = false;
             nextQuestion();
         }
 
