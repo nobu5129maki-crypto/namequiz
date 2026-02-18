@@ -148,9 +148,19 @@
     </div>
 
     <!-- Loading Screen -->
-    <div id="loading-screen" class="hidden fixed inset-0 bg-white/95 z-50 flex flex-col items-center justify-center">
-        <div class="loading-spinner"></div>
-        <p class="mt-6 font-black text-orange-600 uppercase tracking-widest text-xs">AIが問題を生成しています...</p>
+    <div id="loading-screen" class="hidden fixed inset-0 bg-white/95 z-50 flex flex-col items-center justify-center p-6">
+        <div id="loading-content" class="flex flex-col items-center">
+            <div class="loading-spinner"></div>
+            <p class="mt-6 font-black text-orange-600 uppercase tracking-widest text-xs">AIが問題を生成しています...</p>
+        </div>
+        <div id="loading-error" class="hidden text-center max-w-sm">
+            <p class="text-red-600 font-bold mb-2">問題の取得に失敗しました</p>
+            <p id="error-message" class="text-sm text-gray-600 mb-6"></p>
+            <div class="flex gap-4 justify-center">
+                <button onclick="retryQuestion()" class="px-6 py-3 bg-orange-500 text-white font-bold rounded-xl">再試行</button>
+                <button onclick="goBackToStart()" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl">タイトルに戻る</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -164,16 +174,27 @@
         let currentAge = 20;
 
         async function fetchAI(body) {
+            const ctrl = new AbortController();
+            const t = setTimeout(() => ctrl.abort(), 30000);
             try {
                 const res = await fetch('/api/quiz', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
+                    body: JSON.stringify(body),
+                    signal: ctrl.signal
                 });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || "通信エラー");
+                clearTimeout(t);
+                let data;
+                try {
+                    data = await res.json();
+                } catch (_) {
+                    throw new Error(`APIエラー (${res.status}): サーバー応答が不正です`);
+                }
+                if (!res.ok) throw new Error(data.error || `APIエラー (${res.status})`);
                 return data;
             } catch (e) {
+                clearTimeout(t);
+                if (e.name === 'AbortError') throw new Error("タイムアウトしました。しばらくしてから再試行してください。");
                 throw e;
             }
         }
@@ -242,8 +263,24 @@
                 }
             } catch (e) {
                 console.error("Fetch Error:", e);
-                setTimeout(() => nextQuestion(), 1000);
+                document.getElementById('loading-content').classList.add('hidden');
+                document.getElementById('loading-error').classList.remove('hidden');
+                document.getElementById('error-message').innerText = e.message || "通信エラーが発生しました";
             }
+        }
+
+        function retryQuestion() {
+            document.getElementById('loading-content').classList.remove('hidden');
+            document.getElementById('loading-error').classList.add('hidden');
+            nextQuestion();
+        }
+
+        function goBackToStart() {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('loading-content').classList.remove('hidden');
+            document.getElementById('loading-error').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
         }
 
         function revealNextHint() {
