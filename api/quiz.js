@@ -9,33 +9,44 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(req.body)
+  const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+  let lastError = null;
+
+  for (const model of models) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(req.body)
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        lastError = data?.error?.message || data?.error || "APIエラー";
+        if ((response.status === 429 || lastError.includes('quota') || lastError.includes('Quota')) && model === models[0]) {
+          continue;
+        }
+        console.error("Gemini API Error:", data);
+        return res.status(response.status).json({ error: lastError });
       }
-    );
 
-    const data = await response.json();
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        lastError = data?.error?.message || "AIからの応答が不正です。";
+        return res.status(500).json({ error: lastError });
+      }
 
-    if (!response.ok) {
-      const msg = data?.error?.message || data?.error || "APIエラー";
-      console.error("Gemini API Error:", data);
-      return res.status(response.status).json({ error: msg });
+      return res.status(200).json(data);
+    } catch (error) {
+      lastError = error.message;
+      if (model === models[0]) continue;
+      break;
     }
-
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      console.error("Gemini API Error Response:", data);
-      const msg = data?.error?.message || "AIからの応答が不正です。";
-      return res.status(500).json({ error: msg });
-    }
-
-    return res.status(200).json(data);
-  } catch (error) {
-    console.error("Quiz API Error:", error);
-    return res.status(500).json({ error: error.message || "サーバー通信エラーが発生しました。" });
   }
+
+  console.error("Quiz API Error (all models failed):", lastError);
+  return res.status(500).json({ error: lastError || "サーバー通信エラーが発生しました。" });
 }
