@@ -2,9 +2,12 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> 有名人名前当てクイズ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>有名人名前当てクイズ</title>
+    <meta name="description" content="年代別に有名人の名前を当てる10問連続クイズ。AI出題と内蔵問題集の2モード。">
+    <meta name="theme-color" content="#f97316">
     <!-- iOSホーム画面用アイコン設定 -->
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -39,36 +42,56 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
+
         /* アイコン表示用のスタイル */
         .app-icon {
-            width: 64px;
-            height: 64px;
+            width: 48px;
+            height: 48px;
             object-fit: contain;
         }
+        @media (min-width: 640px) { .app-icon { width: 64px; height: 64px; } }
+        /* 出題モード切替 */
+        [role="radio"][aria-checked="true"] {
+            background: #fff;
+            color: #ea580c;
+            box-shadow: 0 1px 3px rgba(0,0,0,.12);
+        }
+        [role="radio"][aria-checked="false"] {
+            color: #6b7280;
+        }
+        button:disabled { cursor: not-allowed; }
+        /* 不正解時の入力欄シェイク */
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+        .shake { animation: shake .3s ease-in-out; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
     <div id="app" class="w-full max-w-md quiz-card overflow-hidden">
         <!-- Header -->
-        <div class="premium-grad p-8 text-white text-center shadow-lg">
+        <div class="premium-grad p-5 sm:p-8 text-white text-center shadow-lg">
             <div class="flex flex-col items-center justify-center mb-2">
-                <!-- アップロードされたicon.svgを表示 -->
-                <img src="icon.svg" alt="App Icon" class="app-icon mb-2">
-                <h1 class="text-3xl font-black tracking-tighter">有名人 名前当てクイズ</h1>
+                <img src="icon.svg" alt="" class="app-icon mb-2">
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tighter">有名人 名前当てクイズ</h1>
             </div>
             <p class="text-orange-100 text-sm font-medium tracking-widest uppercase">Premium Challenge Mode</p>
         </div>
 
         <!-- Start Screen -->
-        <div id="start-screen" class="p-10 space-y-8 text-center">
+        <div id="start-screen" class="p-8 sm:p-10 space-y-8 text-center">
             <div class="bg-orange-50 p-6 rounded-[2rem] border border-orange-100">
                 <p class="text-gray-400 text-xs font-bold uppercase tracking-widest mb-1">あなたの最高スコア</p>
                 <p class="text-4xl font-black text-orange-600 font-sans"><span id="high-score-display">0</span> <span class="text-base font-normal">点</span></p>
             </div>
             <div class="space-y-4">
                 <p class="text-gray-600 font-bold">年代を選んで10問連続チャレンジ！</p>
+                <div class="flex justify-center">
+                    <div class="inline-flex bg-gray-100 rounded-xl p-1 text-xs font-bold" role="radiogroup" aria-label="出題モード">
+                        <button id="mode-ai" onclick="setMode('ai')" class="px-4 py-2 rounded-lg transition" role="radio" aria-checked="true">AIが出題</button>
+                        <button id="mode-bank" onclick="setMode('bank')" class="px-4 py-2 rounded-lg transition" role="radio" aria-checked="false">問題集から出題</button>
+                    </div>
+                </div>
+                <p id="mode-help" class="text-[11px] text-gray-400 leading-relaxed"></p>
                 <div class="grid grid-cols-2 gap-4">
                     <button onclick="startGame(20)" class="bg-white border-2 border-orange-500 text-orange-600 py-4 rounded-2xl font-bold hover:bg-orange-500 hover:text-white transition shadow-sm active:scale-95">20代</button>
                     <button onclick="startGame(30)" class="bg-white border-2 border-orange-500 text-orange-600 py-4 rounded-2xl font-bold hover:bg-orange-500 hover:text-white transition shadow-sm active:scale-95">30代</button>
@@ -79,7 +102,7 @@
         </div>
 
         <!-- Game Screen -->
-        <div id="game-screen" class="hidden p-8 space-y-8">
+        <div id="game-screen" class="hidden p-6 sm:p-8 space-y-8">
             <div class="flex justify-between items-end border-b border-gray-100 pb-4">
                 <div>
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">合計スコア</p>
@@ -88,10 +111,11 @@
                 <div class="text-right">
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">進捗</p>
                     <p class="text-lg font-bold text-gray-600">第 <span id="current-idx-display">1</span> / 10 問</p>
+                    <p id="source-badge" class="text-[10px] text-gray-400"></p>
                 </div>
             </div>
 
-            <div id="hints-container" class="space-y-4 min-h-[320px]">
+            <div id="hints-container" class="space-y-4 min-h-[200px] sm:min-h-[320px]">
                 <div id="hint-1" class="hint-item bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-2xl hidden">
                     <span class="inline-block px-2 py-1 bg-blue-500 text-white text-[10px] font-bold rounded mb-2">第1ヒント (100点)</span>
                     <p id="hint-1-text" class="text-blue-900 font-bold leading-relaxed"></p>
@@ -107,43 +131,51 @@
             </div>
 
             <div class="space-y-4 pt-6">
-                <input type="text" id="answer-input" placeholder="お名前をフルネームで入力" autocomplete="off"
+                <input type="text" id="answer-input" placeholder="名前を入力（ひらがなでもOK）" autocomplete="off" enterkeyhint="done" aria-label="答えの名前"
                        class="w-full px-6 py-5 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-orange-400 focus:bg-white outline-none text-center text-xl font-black transition-all shadow-inner">
+                <p id="answer-note" class="hidden text-center text-sm text-red-500 font-bold" role="status"></p>
                 <div class="flex gap-4">
                     <button id="next-hint-btn" onclick="revealNextHint()" class="flex-1 bg-white border-2 border-slate-200 text-slate-600 font-bold py-5 rounded-2xl transition-all active:scale-95">ヒント</button>
                     <button id="submit-btn" onclick="checkAnswer()" class="flex-[1.5] premium-grad text-white font-black py-5 rounded-2xl shadow-xl transition-all active:scale-95">回答確定</button>
                 </div>
+                <button id="giveup-btn" onclick="giveUp()" class="w-full text-slate-400 text-sm font-bold py-2 underline underline-offset-4">わからない（答えを見る）</button>
             </div>
         </div>
 
         <!-- Result Modal -->
-        <div id="result-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-6">
-            <div class="bg-white rounded-[3rem] p-10 w-full max-w-xs text-center space-y-6 shadow-2xl">
-                <div id="result-emoji" class="text-8xl"></div>
+        <div id="result-modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-6" role="dialog" aria-modal="true" aria-labelledby="result-title">
+            <div class="bg-white rounded-[3rem] p-8 sm:p-10 w-full max-w-xs text-center space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto">
+                <div id="result-emoji" class="text-6xl sm:text-8xl"></div>
                 <div>
                     <h2 id="result-title" class="text-3xl font-black"></h2>
                 </div>
                 <div class="p-5 bg-slate-50 rounded-2xl">
                     <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">正解</p>
-                    <span id="correct-name" class="text-2xl font-black text-slate-800"></span>
+                    <span id="correct-name" class="text-2xl font-black text-slate-800 break-words"></span>
+                    <p id="correct-reading" class="text-xs text-slate-400 mt-1"></p>
+                    <p id="result-points" class="text-sm font-bold text-orange-600 mt-2"></p>
                 </div>
                 <button id="modal-next-btn" onclick="closeModal()" class="w-full premium-grad text-white py-5 rounded-2xl font-black shadow-lg transition active:scale-95">次へ進む</button>
             </div>
         </div>
 
         <!-- Final Score Screen -->
-        <div id="final-screen" class="hidden p-10 text-center space-y-10">
+        <div id="final-screen" class="hidden p-8 sm:p-10 text-center space-y-10">
             <div class="space-y-2">
                 <div class="text-7xl mb-4">👑</div>
                 <h2 class="text-4xl font-black text-slate-800 tracking-tighter">終了！</h2>
                 <p class="text-slate-500">10問の挑戦が終わりました。</p>
+                <p id="final-correct" class="text-slate-500 text-sm"></p>
             </div>
             <div class="relative py-10 bg-slate-50 rounded-[3rem]">
                 <p class="text-7xl font-black text-orange-600 font-sans" id="final-score-display">0</p>
                 <p class="text-xs font-bold text-orange-400 mt-2 tracking-widest uppercase">Total Points</p>
                 <div id="new-record-badge" class="hidden absolute -top-4 -right-4 bg-red-500 text-white text-[10px] font-black px-4 py-2 rounded-full shadow-lg rotate-12 animate-pulse">NEW RECORD!</div>
             </div>
-            <button onclick="location.reload()" class="w-full bg-slate-800 text-white py-6 rounded-2xl font-black shadow-2xl transition active:scale-95">タイトルに戻る</button>
+            <div class="space-y-3">
+                <button id="replay-btn" onclick="replaySameAge()" class="w-full premium-grad text-white py-5 rounded-2xl font-black shadow-xl transition active:scale-95">同じ年代でもう一度</button>
+                <button onclick="backToTitle()" class="w-full bg-slate-800 text-white py-5 rounded-2xl font-black shadow-2xl transition active:scale-95">タイトルに戻る</button>
+            </div>
         </div>
     </div>
 
@@ -151,132 +183,252 @@
     <div id="loading-screen" class="hidden fixed inset-0 bg-white/95 z-50 flex flex-col items-center justify-center p-6">
         <div id="loading-content" class="flex flex-col items-center">
             <div class="loading-spinner"></div>
-            <p class="mt-6 font-black text-orange-600 uppercase tracking-widest text-xs">AIが問題を生成しています...</p>
+            <p id="loading-text" class="mt-6 font-black text-orange-600 uppercase tracking-widest text-xs">AIが問題を生成しています...</p>
         </div>
         <div id="loading-error" class="hidden text-center max-w-sm">
             <p class="text-red-600 font-bold mb-2">問題の取得に失敗しました</p>
-            <p id="error-message" class="text-sm text-gray-600 mb-2"></p>
+            <p id="error-message" class="text-sm text-gray-600 mb-2 break-words"></p>
             <p id="retry-countdown" class="hidden text-orange-600 font-bold mb-4"></p>
-            <div class="flex gap-4 justify-center">
+            <div class="flex flex-wrap gap-3 justify-center">
                 <button id="retry-btn" onclick="retryQuestion()" class="px-6 py-3 bg-orange-500 text-white font-bold rounded-xl">再試行</button>
+                <button id="bank-fallback-btn" onclick="continueWithBank()" class="px-6 py-3 bg-slate-700 text-white font-bold rounded-xl">問題集で続ける</button>
                 <button onclick="goBackToStart()" class="px-6 py-3 bg-gray-200 text-gray-700 font-bold rounded-xl">タイトルに戻る</button>
             </div>
         </div>
     </div>
 
+    <script src="questions.js"></script>
     <script>
-        let targetName = "";
+        // ===== 状態 =====
+        const MAX_QUESTIONS = 10;
+        const HIGH_SCORE_KEY = 'quiz_high_score_pro';
+        const MODE_KEY = 'quiz_mode';
+        const AI_TIMEOUT_MS = 25000;
+
+        let mode = 'ai';              // 'ai' | 'bank'
+        let currentAge = 20;
         let currentTotalScore = 0;
         let currentQuestionIdx = 1;
         let currentHintLevel = 0;
-        let hints = [];
-        let usedNames = []; // 過去に出た名前を記録
-        const MAX_QUESTIONS = 10;
-        let currentAge = 20;
+        let correctCount = 0;
+        let current = null;           // { name, reading, aliases, hints:[3], source:'ai'|'bank' }
+        let usedNames = [];           // このゲームで出題済みの名前（AI への除外指定・問題集の重複回避）
         let quotaRetryTimer = null;
+        let loading = false;
+        let answered = false;         // 1問につき1回だけ判定する
 
-        async function fetchAI(body) {
+        const $ = (id) => document.getElementById(id);
+
+        // ===== 出題モード =====
+        function setMode(next) {
+            mode = next === 'bank' ? 'bank' : 'ai';
+            try { localStorage.setItem(MODE_KEY, mode); } catch (_) {}
+            $('mode-ai').setAttribute('aria-checked', String(mode === 'ai'));
+            $('mode-bank').setAttribute('aria-checked', String(mode === 'bank'));
+            $('mode-help').innerText = mode === 'ai'
+                ? 'AIが毎回新しい問題を作ります。AIが混雑・上限のときは自動で問題集から出題します。'
+                : `内蔵の問題集（${bankTotal()}問）からすぐに出題します。通信不要です。`;
+        }
+
+        function bankTotal() {
+            const bank = window.QUIZ_BANK || {};
+            return Object.values(bank).reduce((n, list) => n + list.length, 0);
+        }
+
+        // ===== 名前の正規化・判定 =====
+        // 全角→半角、カタカナ→ひらがな、スペース・中黒・ハイフン・句読点を除去、小文字化
+        function normalizeName(s) {
+            if (!s) return '';
+            let t = String(s).normalize('NFKC').toLowerCase();
+            t = t.replace(/[\u30a1-\u30f6]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0x60)); // カタカナ→ひらがな
+            t = t.replace(/[\s\u3000・･･\-‐−–—~〜～'’`´.。、,，!！?？「」『』()（）]/g, '');
+            t = t.replace(/(さん|くん|ちゃん|様|さま|氏|選手)$/, '');
+            return t;
+        }
+
+        function isCorrectAnswer(input, q) {
+            const a = normalizeName(input);
+            if (!a) return false;
+            const candidates = [q.name, q.reading, ...(q.aliases || [])].map(normalizeName).filter(Boolean);
+            if (candidates.includes(a)) return true;
+            // 「木村 拓哉」のような姓名の区切りや、読みの一部違い（長音など）を許容
+            const loose = (s) => s.replace(/ー/g, '');
+            return candidates.some((c) => loose(c) === loose(a));
+        }
+
+        // ===== 問題の取得 =====
+        function pickFromBank(age) {
+            const bank = window.QUIZ_BANK || {};
+            const list = bank[age] || [];
+            if (list.length === 0) return null;
+            const used = new Set(usedNames.map(normalizeName));
+            let pool = list.filter((q) => !used.has(normalizeName(q.name)));
+            if (pool.length === 0) pool = list; // 全部出し切ったら再利用
+            const q = pool[Math.floor(Math.random() * pool.length)];
+            const first = (q.reading || q.name).charAt(0);
+            return {
+                name: q.name,
+                reading: q.reading || '',
+                aliases: q.aliases || [],
+                hints: [q.h1, q.h2, `『${first}』から始まる名前です`],
+                source: 'bank',
+            };
+        }
+
+        async function fetchFromAI(age) {
             const ctrl = new AbortController();
-            const t = setTimeout(() => ctrl.abort(), 30000);
+            const t = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
             try {
                 const res = await fetch('/api/quiz', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body),
-                    signal: ctrl.signal
+                    body: JSON.stringify({ age, exclude: usedNames.slice(-20) }),
+                    signal: ctrl.signal,
                 });
-                clearTimeout(t);
-                let data;
-                try {
-                    data = await res.json();
-                } catch (_) {
-                    throw new Error(`APIエラー (${res.status}): サーバー応答が不正です`);
+                let data = null;
+                try { data = await res.json(); } catch (_) { data = null; }
+                if (!res.ok) {
+                    const err = new Error((data && data.error) || `APIエラー (${res.status})`);
+                    err.status = res.status;
+                    err.code = data && data.code;
+                    err.raw = data && data.raw;
+                    throw err;
                 }
-                if (!res.ok) throw new Error(data.error || `APIエラー (${res.status})`);
-                return data;
+                if (!data || !data.name || !data.hint1 || !data.hint2) {
+                    throw new Error('AIの応答が不正でした。');
+                }
+                const first = (data.reading || data.name).charAt(0);
+                return {
+                    name: data.name,
+                    reading: data.reading || '',
+                    aliases: Array.isArray(data.aliases) ? data.aliases : [],
+                    hints: [data.hint1, data.hint2, data.hint3 || `『${first}』から始まる名前です`],
+                    source: 'ai',
+                };
             } catch (e) {
-                clearTimeout(t);
-                if (e.name === 'AbortError') throw new Error("タイムアウトしました。しばらくしてから再試行してください。");
+                if (e.name === 'AbortError') {
+                    const err = new Error('AIの応答がタイムアウトしました。');
+                    err.status = 504;
+                    throw err;
+                }
                 throw e;
+            } finally {
+                clearTimeout(t);
             }
         }
 
-        async function startGame(age) {
+        // ===== 画面遷移 =====
+        function show(id) { $(id).classList.remove('hidden'); }
+        function hide(id) { $(id).classList.add('hidden'); }
+
+        function resetHintViews() {
+            for (let i = 1; i <= 3; i++) {
+                const h = $(`hint-${i}`);
+                h.classList.add('hidden');
+                h.classList.remove('show');
+                $(`hint-${i}-text`).innerText = '';
+            }
+        }
+
+        function startGame(age) {
             currentAge = age;
             currentTotalScore = 0;
+            correctCount = 0;
             currentQuestionIdx = 1;
             usedNames = [];
-            document.getElementById('start-screen').classList.add('hidden');
-            document.getElementById('game-screen').classList.remove('hidden');
-            document.getElementById('total-score').innerText = "0";
+            hide('start-screen');
+            hide('final-screen');
+            show('game-screen');
+            $('total-score').innerText = '0';
+            $('new-record-badge').classList.add('hidden');
             nextQuestion();
         }
 
+        function replaySameAge() { startGame(currentAge); }
+
+        function backToTitle() {
+            hide('final-screen');
+            hide('game-screen');
+            hide('result-modal');
+            show('start-screen');
+            $('high-score-display').innerText = loadHighScore();
+            window.scrollTo(0, 0);
+        }
+
+        function showLoading(text) {
+            $('loading-text').innerText = text;
+            show('loading-content');
+            hide('loading-error');
+            hide('retry-countdown');
+            $('retry-btn').disabled = false;
+            show('loading-screen');
+        }
+
         async function nextQuestion() {
+            if (loading) return;
             if (currentQuestionIdx > MAX_QUESTIONS) {
                 showFinalResult();
                 return;
             }
 
-            document.getElementById('loading-screen').classList.remove('hidden');
+            loading = true;
+            answered = false;
             currentHintLevel = 0;
-            document.getElementById('answer-input').value = "";
-            document.getElementById('current-idx-display').innerText = currentQuestionIdx;
-            
-            for(let i=1; i<=3; i++) {
-                const h = document.getElementById(`hint-${i}`);
-                h.classList.add('hidden');
-                h.classList.remove('show');
-                document.getElementById(`hint-${i}-text`).innerText = "";
-            }
+            current = null;
+            $('answer-input').value = '';
+            hide('answer-note');
+            $('current-idx-display').innerText = currentQuestionIdx;
+            $('source-badge').innerText = '';
+            resetHintViews();
+            window.scrollTo(0, 0);
+
+            showLoading(mode === 'ai' ? 'AIが問題を生成しています...' : '問題を選んでいます...');
 
             try {
-                const excluded = usedNames.length > 0 ? `過去に出た名前(${usedNames.join(',')})以外で選んでください。` : "";
-                const response = await fetchAI({
-                    contents: [{ parts: [{ text: `日本の有名人クイズ（${currentAge}代向け）を1つ作成してください。${excluded}
-                    必ず以下のJSONフォーマットのみを正確に出力してください。
-
-                    {
-                      "name": "フルネーム",
-                      "hint1": "その人のメインの職業や実績",
-                      "hint2": "具体的な出演作や有名なエピソード",
-                      "hint3": "苗字の最初の1文字（例：『あ』から始まる）"
-                    }` }] }],
-                    generationConfig: { 
-                        responseMimeType: "application/json"
+                let q = null;
+                if (mode === 'ai') {
+                    try {
+                        q = await fetchFromAI(currentAge);
+                    } catch (e) {
+                        console.warn('AI fetch failed:', e);
+                        // 無料枠上限・混雑・サーバー側の不調・オフラインはユーザーを待たせず問題集から出題する
+                        // （400 系のうち 429 以外＝リクエスト自体の問題だけはエラー表示にする）
+                        const s = e.status || 0;
+                        const fallbackable = !(s >= 400 && s < 500 && s !== 429);
+                        const bankQ = fallbackable ? pickFromBank(currentAge) : null;
+                        if (!bankQ) throw e;
+                        q = bankQ;
+                        q.fallbackReason = s === 429 ? 'AIの利用上限のため' : (s === 503 ? 'AIが混雑中のため' : 'AIに接続できないため');
                     }
-                });
-                
-                if (response.candidates && response.candidates[0]) {
-                    const contentText = response.candidates[0].content.parts[0].text;
-                    const data = JSON.parse(contentText);
-                    
-                    targetName = data.name || data.名前 || "不明";
-                    usedNames.push(targetName);
-                    
-                    const h1 = data.hint1 || data.ヒント1 || "情報の取得に失敗しました";
-                    const h2 = data.hint2 || data.ヒント2 || "情報の取得に失敗しました";
-                    const h3 = data.hint3 || data.ヒント3 || (targetName.charAt(0) + "から始まる名前です");
-
-                    hints = [h1, h2, h3];
-                    
-                    document.getElementById('loading-screen').classList.add('hidden');
-                    revealNextHint();
+                } else {
+                    q = pickFromBank(currentAge);
+                    if (!q) throw new Error('この年代の問題集がまだありません。');
                 }
+
+                current = q;
+                usedNames.push(q.name);
+                $('source-badge').innerText = q.source === 'ai'
+                    ? 'AI出題'
+                    : (q.fallbackReason ? `${q.fallbackReason}問題集から出題` : '問題集から出題');
+                hide('loading-screen');
+                revealNextHint();
+                loading = false;
             } catch (e) {
-                console.error("Fetch Error:", e);
-                document.getElementById('loading-content').classList.add('hidden');
-                document.getElementById('loading-error').classList.remove('hidden');
-                const errMsg = e.message || "通信エラーが発生しました";
-                document.getElementById('error-message').innerText = errMsg.includes("quota") || errMsg.includes("Quota") 
-                    ? "無料枠の利用制限に達しました。" 
-                    : errMsg;
-                
-                const retryMatch = errMsg.match(/retry in (\d+(?:\.\d+)?)s/i);
-                const retrySec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 0;
-                const countdownEl = document.getElementById('retry-countdown');
-                const retryBtn = document.getElementById('retry-btn');
-                
+                loading = false;
+                console.error('Fetch Error:', e);
+                hide('loading-content');
+                show('loading-error');
+                const errMsg = e.message || '通信エラーが発生しました';
+                $('error-message').innerText = errMsg;
+                $('bank-fallback-btn').classList.toggle('hidden', !pickFromBank(currentAge));
+
+                // 「retry in 23.5s」のような文言があれば自動再試行のカウントダウンを出す
+                const src = `${errMsg} ${e.raw || ''}`;
+                const retryMatch = src.match(/retry in (\d+(?:\.\d+)?)s/i);
+                const retrySec = retryMatch ? Math.min(60, Math.ceil(parseFloat(retryMatch[1]))) : 0;
+                const countdownEl = $('retry-countdown');
+                const retryBtn = $('retry-btn');
+
                 if (retrySec > 0) {
                     retryBtn.disabled = true;
                     countdownEl.classList.remove('hidden');
@@ -285,7 +437,7 @@
                     if (quotaRetryTimer) clearInterval(quotaRetryTimer);
                     quotaRetryTimer = setInterval(() => {
                         remaining--;
-                        countdownEl.innerText = remaining > 0 ? `${remaining}秒後に自動で再試行します...` : "再試行中...";
+                        countdownEl.innerText = remaining > 0 ? `${remaining}秒後に自動で再試行します...` : '再試行中...';
                         if (remaining <= 0) {
                             clearInterval(quotaRetryTimer);
                             quotaRetryTimer = null;
@@ -298,91 +450,157 @@
             }
         }
 
-        function retryQuestion() {
+        function clearRetryTimer() {
             if (quotaRetryTimer) {
                 clearInterval(quotaRetryTimer);
                 quotaRetryTimer = null;
             }
-            document.getElementById('loading-content').classList.remove('hidden');
-            document.getElementById('loading-error').classList.add('hidden');
-            document.getElementById('retry-countdown').classList.add('hidden');
-            document.getElementById('retry-btn').disabled = false;
+        }
+
+        function retryQuestion() {
+            clearRetryTimer();
+            nextQuestion();
+        }
+
+        // エラー画面から「問題集で続ける」：このゲームの残りは問題集から出す
+        function continueWithBank() {
+            clearRetryTimer();
+            mode = 'bank';
+            $('mode-ai').setAttribute('aria-checked', 'false');
+            $('mode-bank').setAttribute('aria-checked', 'true');
             nextQuestion();
         }
 
         function goBackToStart() {
-            document.getElementById('loading-screen').classList.add('hidden');
-            document.getElementById('loading-content').classList.remove('hidden');
-            document.getElementById('loading-error').classList.add('hidden');
-            document.getElementById('game-screen').classList.add('hidden');
-            document.getElementById('start-screen').classList.remove('hidden');
+            clearRetryTimer();
+            loading = false;
+            hide('loading-screen');
+            show('loading-content');
+            hide('loading-error');
+            hide('game-screen');
+            show('start-screen');
+            // 途中でやめてもモード設定は保存値に戻す
+            try { setMode(localStorage.getItem(MODE_KEY) || 'ai'); } catch (_) { setMode('ai'); }
         }
 
+        // ===== ヒント =====
         function revealNextHint() {
-            if (currentHintLevel >= 3) return;
+            if (!current || currentHintLevel >= 3) return;
             currentHintLevel++;
-            const h = document.getElementById(`hint-${currentHintLevel}`);
-            const textElement = document.getElementById(`hint-${currentHintLevel}-text`);
-            
-            if (textElement) {
-                const text = hints[currentHintLevel-1];
-                textElement.innerText = text;
-                h.classList.remove('hidden');
-                setTimeout(() => h.classList.add('show'), 50);
-            }
-            
-            const nextBtn = document.getElementById('next-hint-btn');
-            if (currentHintLevel === 3) {
+            const h = $(`hint-${currentHintLevel}`);
+            const textElement = $(`hint-${currentHintLevel}-text`);
+            textElement.innerText = current.hints[currentHintLevel - 1] || '';
+            h.classList.remove('hidden');
+            setTimeout(() => h.classList.add('show'), 50);
+
+            const nextBtn = $('next-hint-btn');
+            const remaining = 3 - currentHintLevel;
+            if (remaining === 0) {
                 nextBtn.disabled = true;
                 nextBtn.classList.add('opacity-50');
+                nextBtn.innerText = 'ヒントなし';
             } else {
                 nextBtn.disabled = false;
                 nextBtn.classList.remove('opacity-50');
+                nextBtn.innerText = `ヒント（残り${remaining}）`;
             }
+            if (currentHintLevel === 1) {
+                // スマホでキーボードが即時に出て画面が隠れないよう、初回はフォーカスしない
+                if (window.matchMedia('(min-width: 640px)').matches) $('answer-input').focus();
+            }
+        }
+
+        // ===== 回答 =====
+        function pointsForLevel(level) {
+            return level === 1 ? 100 : (level === 2 ? 50 : 30);
         }
 
         function checkAnswer() {
-            const input = document.getElementById('answer-input').value.trim();
-            if (!input) return;
-
-            const normalize = (s) => s.replace(/\s+/g, '').toLowerCase();
-            const isCorrect = normalize(input) === normalize(targetName);
-            
-            if (isCorrect) {
-                let points = currentHintLevel === 1 ? 100 : (currentHintLevel === 2 ? 50 : 30);
-                currentTotalScore += points;
-                document.getElementById('total-score').innerText = currentTotalScore;
-                document.getElementById('result-emoji').innerText = "🎉";
-                document.getElementById('result-title').innerText = "正解！";
-            } else {
-                document.getElementById('result-emoji').innerText = "❌";
-                document.getElementById('result-title').innerText = "残念...";
+            if (!current || answered || loading) return;
+            const inputEl = $('answer-input');
+            const input = inputEl.value.trim();
+            if (!input) {
+                $('answer-note').innerText = '名前を入力してください（わからないときは下の「わからない」）';
+                show('answer-note');
+                inputEl.classList.remove('shake');
+                void inputEl.offsetWidth;
+                inputEl.classList.add('shake');
+                inputEl.focus();
+                return;
             }
-            document.getElementById('correct-name').innerText = targetName;
-            document.getElementById('result-modal').classList.remove('hidden');
-            document.getElementById('modal-next-btn').innerText = currentQuestionIdx === MAX_QUESTIONS ? "最終結果を見る" : "次の問題へ";
+            showResult(isCorrectAnswer(input, current));
+        }
+
+        function giveUp() {
+            if (!current || answered || loading) return;
+            showResult(false);
+        }
+
+        function showResult(isCorrect) {
+            answered = true;
+            const points = isCorrect ? pointsForLevel(currentHintLevel) : 0;
+            if (isCorrect) {
+                currentTotalScore += points;
+                correctCount++;
+                $('total-score').innerText = currentTotalScore;
+                $('result-emoji').innerText = '🎉';
+                $('result-title').innerText = '正解！';
+                $('result-points').innerText = `+${points}点`;
+            } else {
+                $('result-emoji').innerText = '❌';
+                $('result-title').innerText = '残念...';
+                $('result-points').innerText = '';
+            }
+            $('correct-name').innerText = current.name;
+            $('correct-reading').innerText = current.reading && normalizeName(current.reading) !== normalizeName(current.name) ? current.reading : '';
+            $('modal-next-btn').innerText = currentQuestionIdx === MAX_QUESTIONS ? '最終結果を見る' : '次の問題へ';
+            show('result-modal');
+            $('modal-next-btn').focus();
         }
 
         function closeModal() {
-            document.getElementById('result-modal').classList.add('hidden');
+            if ($('result-modal').classList.contains('hidden')) return; // 二重クリック防止
+            hide('result-modal');
             // 正解でも不正解でも次の問題番号に進む
             currentQuestionIdx++;
             nextQuestion();
         }
 
-        function showFinalResult() {
-            document.getElementById('game-screen').classList.add('hidden');
-            document.getElementById('final-screen').classList.remove('hidden');
-            document.getElementById('final-score-display').innerText = currentTotalScore;
+        // ===== 最終結果 =====
+        function loadHighScore() {
+            try { return parseInt(localStorage.getItem(HIGH_SCORE_KEY) || '0', 10) || 0; } catch (_) { return 0; }
+        }
 
-            const highScore = parseInt(localStorage.getItem('quiz_high_score_pro') || "0");
+        function showFinalResult() {
+            hide('game-screen');
+            hide('loading-screen');
+            show('final-screen');
+            $('final-score-display').innerText = currentTotalScore;
+            $('final-correct').innerText = `${MAX_QUESTIONS}問中 ${correctCount}問 正解`;
+            window.scrollTo(0, 0);
+
+            const highScore = loadHighScore();
             if (currentTotalScore > highScore) {
-                localStorage.setItem('quiz_high_score_pro', currentTotalScore);
-                document.getElementById('new-record-badge').classList.remove('hidden');
+                try { localStorage.setItem(HIGH_SCORE_KEY, String(currentTotalScore)); } catch (_) {}
+                $('new-record-badge').classList.remove('hidden');
+            } else {
+                $('new-record-badge').classList.add('hidden');
             }
         }
 
-        document.getElementById('high-score-display').innerText = localStorage.getItem('quiz_high_score_pro') || 0;
+        // ===== 初期化 =====
+        $('answer-input').addEventListener('keydown', (e) => {
+            // IME 変換確定の Enter（isComposing）では送信しない
+            if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) {
+                e.preventDefault();
+                checkAnswer();
+            }
+        });
+        $('answer-input').addEventListener('input', () => hide('answer-note'));
+        // 結果モーダルの Enter は、フォーカスした「次へ」ボタンのクリックとして処理される（二重実行を避けるため独自ハンドラは付けない）
+
+        $('high-score-display').innerText = loadHighScore();
+        try { setMode(localStorage.getItem(MODE_KEY) || 'ai'); } catch (_) { setMode('ai'); }
     </script>
 </body>
 </html>
